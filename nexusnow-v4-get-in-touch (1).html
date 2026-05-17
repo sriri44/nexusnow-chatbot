@@ -1,0 +1,3818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NexusNow.ai – Nexus Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/css/intlTelInput.css" />
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+/*<script>
+  (function () {
+    emailjs.init("SygILk7p9EWZT0DY2");
+  })();
+</script>*/
+
+<style>
+/* ════════════════════════════════════════════
+   RESET & BASE
+════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background:
+    radial-gradient(circle at top left, #f3eeff 0%, #ffffff 40%),
+    radial-gradient(circle at bottom right, #ede7ff 0%, #ffffff 45%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ════════════════════════════════════════════
+   DEMO BACKDROP
+════════════════════════════════════════════ */
+.demo-backdrop {
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(0,168,255,.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 70%, rgba(0,102,255,.10) 0%, transparent 55%),
+    #ffff;
+}
+
+.demo-label {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+.demo-label h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  color: rgba(255,255,255,.06);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.demo-label p {
+  font-size: .9rem;
+  color: rgba(255,255,255,.08);
+  margin-top: .5rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.chat-popup {
+    position: fixed;
+    bottom: 100px;
+    right: 28px;
+
+    width: 390px;
+    height: 650px;
+
+    background: #fff;
+    border-radius: 16px;
+
+    overflow: hidden;
+
+    transform: scale(0.88) translateY(24px);
+    transform-origin: bottom right;
+
+    opacity: 0;
+    pointer-events: none;
+
+    transition:
+      transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+      opacity 0.2s;
+
+    box-shadow:
+      0 10px 44px rgba(18,45,94,0.18);
+
+    z-index: 9999;
+}
+
+.chat-popup.open {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    pointer-events: all;
+}
+#chatFrame{
+    width:100%;
+    height:100%;
+    border:none;
+}
+#nn-chatbox.hide-chatbox{
+    opacity:0;
+    pointer-events:none;
+    transform:scale(.85);
+}
+/* ════════════════════════════════════════════
+   CSS DESIGN TOKENS  (UNCHANGED)
+════════════════════════════════════════════ */
+:root {
+  --nn-blue:       #6B31FF;
+  --nn-blue-dark:  #5a22f0;
+  --nn-blue-light: #f3eeff;
+  --nn-navy:       #2a0b57;
+
+  --nn-text:       #1a1a2e;
+  --nn-muted:      #6b7280;
+  --nn-border:     #e5d9ff;
+  --nn-surface:    #f8f5ff;
+  --nn-white:      #ffffff;
+
+  --radius-lg:     16px;
+  --radius-md:     12px;
+  --radius-sm:     8px;
+
+  --shadow-float:  0 24px 64px rgba(107,49,255,.22),
+                    0 4px 16px rgba(0,0,0,.12);
+
+  --shadow-btn:    0 2px 8px rgba(107,49,255,.35);
+
+  --transition:    .22s cubic-bezier(.4,0,.2,1);
+}
+/* ════════════════════════════════════════════
+   LAUNCHER  (UNCHANGED)
+════════════════════════════════════════════ */
+#nn-launcher {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+#nn-tooltip {
+  background: var(--nn-navy);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-size: .78rem;
+  font-weight: 500;
+  letter-spacing: .03em;
+  padding: 7px 14px;
+  border-radius: 20px;
+  white-space: nowrap;
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .2s, transform .2s;
+  pointer-events: none;
+}
+
+#nn-launcher:hover #nn-tooltip { opacity: 1; transform: translateY(0); }
+
+#nn-fab {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--nn-blue) 0%, var(--nn-blue-dark) 100%);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 24px rgba(0,150,230,.55);
+  transition: transform .2s, box-shadow .2s;
+  position: relative;
+  outline: none;
+}
+
+#nn-fab:hover  { transform: scale(1.08); box-shadow: 0 8px 32px rgba(0,150,230,.7); }
+#nn-fab:active { transform: scale(.95); }
+
+#nn-fab svg { transition: opacity .2s, transform .2s; position: absolute; }
+#nn-fab .icon-chat  { opacity: 1; transform: scale(1) rotate(0deg); }
+#nn-fab .icon-close { opacity: 0; transform: scale(.5) rotate(-90deg); }
+
+#nn-fab.open .icon-chat  { opacity: 0; transform: scale(.5) rotate(90deg); }
+#nn-fab.open .icon-close { opacity: 1; transform: scale(1) rotate(0deg); }
+
+#nn-badge {
+  position: absolute;
+  top: -2px; right: -2px;
+  width: 18px; height: 18px;
+  background: #ff4757;
+  border-radius: 50%;
+  border: 2px solid var(--nn-navy);
+  font-size: .6rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  transition: opacity .2s, transform .2s;
+}
+
+#nn-badge.hidden { opacity: 0; transform: scale(0); }
+
+#nn-fab::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,150,230,.5);
+  animation: nn-pulse 2.4s ease-out infinite;
+}
+
+@keyframes nn-pulse {
+  0%   { transform: scale(1);   opacity: .8; }
+  70%  { transform: scale(1.5); opacity: 0;  }
+  100% { transform: scale(1.5); opacity: 0;  }
+}
+
+/* ════════════════════════════════════════════
+   WIDGET WINDOW
+════════════════════════════════════════════ */
+#nn-chatbox {
+  position: fixed;
+  bottom: 106px; right: 28px;
+  z-index: 9998;
+  width: 390px;
+  height: 600px;
+  max-height: calc(100vh - 130px);
+  border-radius: var(--radius-lg);
+  background: var(--nn-surface);
+  box-shadow: var(--shadow-float);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform-origin: bottom right;
+  transform: scale(.85) translateY(20px);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .28s cubic-bezier(.34,1.56,.64,1), opacity .22s ease;
+  border: 1px solid rgba(0,0,0,.06);
+}
+
+#nn-chatbox.open {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ════════════════════════════════════════════
+   HEADER  (UNCHANGED)
+════════════════════════════════════════════ */
+.nn-header {
+  background: linear-gradient(120deg, #0a1628 0%, #0e2041 55%, #0a1a38 100%);
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.nn-header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='29' fill='none' stroke='rgba(0,150,230,.06)' stroke-width='1'/%3E%3Cline x1='0' y1='30' x2='60' y2='30' stroke='rgba(0,150,230,.04)' stroke-width='1'/%3E%3Cline x1='30' y1='0' x2='30' y2='60' stroke='rgba(0,150,230,.04)' stroke-width='1'/%3E%3C/svg%3E") repeat;
+  opacity: .5;
+}
+
+.nn-avatar {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--nn-blue) 0%, #0055cc 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.15);
+}
+
+.nn-avatar svg { width: 22px; height: 22px; }
+.nn-header-info { flex: 1; position: relative; z-index: 1; }
+
+.nn-bot-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: .95rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: .01em;
+  line-height: 1.2;
+}
+
+.nn-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+}
+
+.nn-status-dot {
+  width: 6px; height: 6px;
+  background: #22c55e;
+  border-radius: 50%;
+  animation: nn-blink 2.5s ease-in-out infinite;
+}
+
+@keyframes nn-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .4; }
+}
+
+.nn-status-text {
+  font-size: .72rem;
+  color: rgba(255,255,255,.65);
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: .02em;
+}
+
+.nn-header-action {
+  position: relative; z-index: 1;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 50%;
+  width: 30px; height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.nn-header-action:hover { background: rgba(255,255,255,.18); }
+.nn-header-action svg { width: 14px; height: 14px; }
+
+/* ════════════════════════════════════════════
+   CHAT CONVERSATION BODY
+════════════════════════════════════════════ */
+#nn-body {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--nn-surface);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 12px 10px;
+  gap: 0;
+  scroll-behavior: smooth;
+}
+
+#nn-body::-webkit-scrollbar { width: 4px; }
+#nn-body::-webkit-scrollbar-track { background: transparent; }
+#nn-body::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+
+/* ════════════════════════════════════════════
+   CHAT MESSAGE BLOCKS
+════════════════════════════════════════════ */
+
+/* Bot message bubble */
+.nn-chat-block {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+  animation: nn-chat-in .28s cubic-bezier(.34,1.4,.64,1) both;
+}
+
+@keyframes nn-chat-in {
+  from { opacity: 0; transform: translateY(14px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.nn-bot-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  margin-bottom: 6px;
+}
+
+.nn-bot-avatar-sm {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--nn-blue) 0%, var(--nn-blue-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0,150,230,.35);
+}
+
+.nn-bot-avatar-sm svg { width: 13px; height: 13px; }
+
+.nn-bot-bubble {
+  background: var(--nn-white);
+  border: 1px solid var(--nn-border);
+  border-radius: 14px 14px 14px 4px;
+  padding: 10px 13px;
+  font-size: .8rem;
+  color: var(--nn-text);
+  line-height: 1.55;
+  max-width: calc(100% - 36px);
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+
+.nn-bot-bubble strong {
+  color: var(--nn-blue-dark);
+  font-weight: 600;
+}
+
+/* User selection bubble */
+.nn-user-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+  animation: nn-chat-in .25s ease both;
+}
+
+.nn-user-bubble {
+  background: linear-gradient(135deg, var(--nn-blue) 0%, var(--nn-blue-dark) 100%);
+  color: #fff;
+  border-radius: 14px 14px 4px 14px;
+  padding: 9px 13px;
+  font-size: .8rem;
+  line-height: 1.45;
+  max-width: 80%;
+  box-shadow: 0 2px 8px rgba(0,150,230,.3);
+  font-weight: 500;
+}
+
+/* Timestamp */
+.nn-msg-time {
+  font-size: .64rem;
+  color: var(--nn-muted);
+  font-family: 'Outfit', sans-serif;
+  margin-top: 3px;
+  padding-left: 33px;
+  letter-spacing: .02em;
+}
+
+.nn-msg-time.right {
+  text-align: right;
+  padding-left: 0;
+  padding-right: 2px;
+}
+
+/* ════════════════════════════════════════════
+   CARD LIST MESSAGE
+════════════════════════════════════════════ */
+.nn-card-list-block {
+  margin-bottom: 16px;
+  padding-left: 33px;
+  animation: nn-chat-in .3s cubic-bezier(.34,1.4,.64,1) both;
+  animation-delay: .08s;
+}
+
+.nn-card-list-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: .65rem;
+  font-weight: 700;
+  color: var(--nn-muted);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.nn-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+/* Interactive Card */
+.nn-card {
+  background: var(--nn-white);
+  border: 1.5px solid var(--nn-border);
+  border-radius: var(--radius-md);
+  padding: 11px 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  transition: border-color var(--transition), background var(--transition), transform .12s, box-shadow .15s;
+  text-align: left;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.nn-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--nn-blue);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform .2s ease;
+  border-radius: 0 2px 2px 0;
+}
+
+.nn-card:hover::before { transform: scaleY(1); }
+
+.nn-card:hover {
+  border-color: var(--nn-blue);
+  background: var(--nn-blue-light);
+  transform: translateX(2px);
+  box-shadow: 0 2px 10px rgba(0,150,230,.12);
+}
+
+.nn-card:active { transform: scale(.99); }
+
+.nn-card.selected {
+  border-color: var(--nn-blue);
+  background: var(--nn-blue-light);
+  pointer-events: none;
+  opacity: .75;
+}
+
+.nn-card-icon {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--nn-blue) 0%, var(--nn-blue-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0,150,230,.28);
+  transition: transform .15s;
+}
+
+.nn-card:hover .nn-card-icon { transform: scale(1.08); }
+.nn-card-icon svg { width: 17px; height: 17px; }
+
+.nn-card-content { flex: 1; min-width: 0; }
+
+.nn-card-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: .83rem;
+  font-weight: 600;
+  color: var(--nn-text);
+  line-height: 1.3;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nn-card-sub {
+  font-size: .72rem;
+  color: var(--nn-muted);
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nn-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.nn-card-arrow {
+  color: var(--nn-muted);
+  font-size: 1.1rem;
+  transition: transform .15s, color .15s;
+}
+
+.nn-card:hover .nn-card-arrow { transform: translateX(3px); color: var(--nn-blue); }
+
+/* Status badges */
+.nn-badge {
+  font-family: 'Outfit', sans-serif;
+  font-size: .6rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.nn-badge-new {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.nn-badge-active {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.nn-badge-info {
+  background: #fefce8;
+  color: #ca8a04;
+  border: 1px solid #fde68a;
+}
+
+/* ════════════════════════════════════════════
+   ANSWER CARD (inline in chat)
+════════════════════════════════════════════ */
+.nn-answer-block {
+  padding-left: 33px;
+  margin-bottom: 16px;
+  animation: nn-chat-in .3s cubic-bezier(.34,1.4,.64,1) both;
+  animation-delay: .1s;
+}
+
+.nn-answer-bubble {
+  background: var(--nn-white);
+  border: 1.5px solid var(--nn-border);
+  border-left: 3px solid var(--nn-blue);
+  border-radius: 4px 14px 14px 14px;
+  padding: 13px 15px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.07);
+}
+
+.nn-answer-q-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--nn-blue);
+  letter-spacing: .02em;
+  margin-bottom: 4px;
+}
+
+.nn-answer-q-text {
+  font-family: 'Outfit', sans-serif;
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--nn-text);
+  line-height: 1.35;
+  margin-bottom: 9px;
+}
+
+.nn-answer-divider {
+  height: 1px;
+  background: var(--nn-border);
+  margin: 0 0 9px;
+}
+
+.nn-answer-text {
+  font-size: .8rem;
+  color: var(--nn-text);
+  line-height: 1.68;
+}
+
+/* ════════════════════════════════════════════
+   QUICK REPLY CHIPS
+════════════════════════════════════════════ */
+.nn-chips-block {
+  padding-left: 33px;
+  margin-bottom: 14px;
+  animation: nn-chat-in .3s ease both;
+  animation-delay: .15s;
+}
+
+.nn-chips-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: .65rem;
+  font-weight: 700;
+  color: var(--nn-muted);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: 7px;
+}
+
+.nn-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nn-chip {
+  padding: 5px 11px;
+  border: 1.5px solid var(--nn-border);
+  border-radius: 20px;
+  background: var(--nn-white);
+  font-size: .73rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
+  color: var(--nn-text);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition), color var(--transition), transform .12s;
+  white-space: nowrap;
+}
+
+.nn-chip:hover {
+  border-color: var(--nn-blue);
+  background: var(--nn-blue-light);
+  color: var(--nn-blue-dark);
+  transform: translateY(-1px);
+}
+
+.nn-chip.home-chip {
+  background: var(--nn-navy);
+  border-color: var(--nn-navy);
+  color: #fff;
+}
+
+.nn-chip.home-chip:hover {
+  background: var(--nn-blue-dark);
+  border-color: var(--nn-blue-dark);
+  color: #fff;
+}
+
+/* ════════════════════════════════════════════
+   VIEW ALL BUTTON
+════════════════════════════════════════════ */
+.nn-view-all-block {
+  padding-left: 33px;
+  margin-bottom: 14px;
+  animation: nn-chat-in .3s ease both;
+  animation-delay: .2s;
+}
+
+.nn-view-all-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1.5px dashed var(--nn-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  font-size: .76rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  color: var(--nn-blue);
+  letter-spacing: .02em;
+  transition: border-color var(--transition), background var(--transition);
+  width: 100%;
+  justify-content: center;
+}
+
+.nn-view-all-btn:hover {
+  border-color: var(--nn-blue);
+  background: var(--nn-blue-light);
+}
+
+/* ════════════════════════════════════════════
+   TYPING INDICATOR
+════════════════════════════════════════════ */
+.nn-typing-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  margin-bottom: 12px;
+}
+
+.nn-typing-bubble {
+  background: var(--nn-white);
+  border: 1px solid var(--nn-border);
+  border-radius: 14px 14px 14px 4px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+
+.nn-dot {
+  width: 6px; height: 6px;
+  background: #9ca3af;
+  border-radius: 50%;
+  animation: nn-typing 1.2s infinite;
+}
+
+.nn-dot:nth-child(2) { animation-delay: .2s; }
+.nn-dot:nth-child(3) { animation-delay: .4s; }
+
+@keyframes nn-typing {
+  0%, 80%, 100% { transform: translateY(0); opacity: .5; }
+  40%            { transform: translateY(-5px); opacity: 1; }
+}
+
+/* ════════════════════════════════════════════
+   FOOTER
+════════════════════════════════════════════ */
+.nn-footer {
+  text-align: center;
+  font-size: .65rem;
+  color: #adb5bd;
+  padding: 8px 0 10px;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: .04em;
+  background: var(--nn-white);
+  border-top: 1px solid var(--nn-border);
+  flex-shrink: 0;
+}
+
+.nn-footer a { color: var(--nn-blue); text-decoration: none; font-weight: 600; }
+
+/* ════════════════════════════════════════════
+   MOBILE
+════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  #nn-chatbox {
+    width: calc(100vw - 20px);
+    right: 10px;
+    bottom: 96px;
+    height: calc(100vh - 110px);
+  }
+
+  #nn-launcher { right: 14px; bottom: 18px; }
+}
+
+/* Scroll anchor for auto-scroll */
+#nn-scroll-anchor { height: 1px; flex-shrink: 0; }
+
+/* ════════════════════════════════════════════
+   LEAD CAPTURE INPUT BLOCK
+════════════════════════════════════════════ */
+.nn-input-block {
+  padding-left: 33px;
+  margin-bottom: 14px;
+  animation: nn-chat-in .28s cubic-bezier(.34,1.4,.64,1) both;
+}
+
+.nn-input-field-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.nn-input-field {
+  flex: 1;
+  border: 1.5px solid var(--nn-border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  font-size: .8rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--nn-text);
+  background: var(--nn-white);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.nn-input-field:focus {
+  border-color: var(--nn-blue);
+  box-shadow: 0 0 0 3px rgba(0,150,230,.1);
+}
+
+.nn-input-field.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239,68,68,.1);
+}
+
+.nn-input-error-msg {
+  font-size: .7rem;
+  color: #ef4444;
+  margin-top: 4px;
+  padding-left: 2px;
+  font-family: 'Outfit', sans-serif;
+}
+
+.nn-input-send-btn {
+  padding: 0 14px;
+  background: linear-gradient(135deg, var(--nn-blue) 0%, var(--nn-blue-dark) 100%);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: #fff;
+  font-size: .8rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  transition: opacity .2s, transform .15s;
+  white-space: nowrap;
+}
+
+.nn-input-send-btn:hover { opacity: .9; transform: translateY(-1px); }
+.nn-input-send-btn:active { transform: scale(.97); }
+.nn-input-send-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+/* ════════════════════════════════════════════
+   ACTION BUTTONS (CTA row)
+════════════════════════════════════════════ */
+.nn-action-block {
+  padding-left: 33px;
+  margin-bottom: 14px;
+  animation: nn-chat-in .3s cubic-bezier(.34,1.4,.64,1) both;
+  animation-delay: .1s;
+}
+
+.nn-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nn-action-btn {
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--nn-border);
+  background: var(--nn-white);
+  font-size: .78rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nn-action-btn:hover { border-color: var(--nn-blue); background: var(--nn-blue-light); color: var(--nn-blue-dark); }
+.nn-action-btn:active { transform: scale(.97); }
+.nn-action-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.nn-action-btn.primary {
+  background: linear-gradient(135deg, var(--nn-blue) 0%, var(--nn-blue-dark) 100%);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: var(--shadow-btn);
+}
+
+.nn-action-btn.primary:hover { opacity: .9; color: #fff; background: linear-gradient(135deg, var(--nn-blue) 0%, var(--nn-blue-dark) 100%); }
+
+.nn-action-btn.whatsapp {
+  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(37,211,102,.35);
+}
+
+.nn-action-btn.whatsapp:hover { opacity: .9; color: #fff; }
+
+.nn-action-btn.secondary {
+  color: var(--nn-muted);
+  font-weight: 500;
+}
+
+/* ════════════════════════════════════════════
+   SUCCESS / CONFIRMATION CARD
+════════════════════════════════════════════ */
+.nn-success-block {
+  padding-left: 33px;
+  margin-bottom: 16px;
+  animation: nn-chat-in .4s cubic-bezier(.34,1.56,.64,1) both;
+}
+
+.nn-success-card {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1.5px solid #86efac;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+}
+
+.nn-success-icon {
+  font-size: 1.6rem;
+  margin-bottom: 6px;
+}
+
+.nn-success-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: .88rem;
+  font-weight: 700;
+  color: #15803d;
+  margin-bottom: 4px;
+}
+
+.nn-success-sub {
+  font-size: .76rem;
+  color: #166534;
+  line-height: 1.5;
+}
+
+.nn-success-details {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #bbf7d0;
+  font-size: .73rem;
+  color: #15803d;
+  line-height: 1.7;
+}
+
+/* ════════════════════════════════════════════
+   CONSULTATION TRIGGER BANNER
+════════════════════════════════════════════ */
+.nn-consult-banner {
+  background: linear-gradient(120deg, #0e2041 0%, #0a1628 100%);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  margin-left: 33px;
+  animation: nn-chat-in .35s cubic-bezier(.34,1.4,.64,1) both;
+  border: 1px solid rgba(0,150,230,.25);
+}
+
+.nn-consult-banner-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: .82rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 3px;
+}
+
+.nn-consult-banner-sub {
+  font-size: .72rem;
+  color: rgba(255,255,255,.65);
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.nn-consult-banner-btns {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+/* ════════════════════════════════════════════
+   DATE / TIME PICKER GRID
+════════════════════════════════════════════ */
+.nn-time-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.nn-time-chip {
+  padding: 7px 10px;
+  border: 1.5px solid var(--nn-border);
+  border-radius: var(--radius-sm);
+  background: var(--nn-white);
+  font-size: .73rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition);
+  color: var(--nn-text);
+}
+
+.nn-time-chip:hover {
+  border-color: var(--nn-blue);
+  background: var(--nn-blue-light);
+  color: var(--nn-blue-dark);
+}
+
+.nn-time-chip.selected {
+  background: var(--nn-blue);
+  border-color: var(--nn-blue);
+  color: #fff;
+}
+
+/* ════════════════════════════════════════════
+   PROGRESS INDICATOR
+════════════════════════════════════════════ */
+.nn-progress-block {
+  padding-left: 33px;
+  margin-bottom: 8px;
+  animation: nn-chat-in .2s ease both;
+}
+
+.nn-progress-bar {
+  height: 3px;
+  background: var(--nn-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.nn-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--nn-blue) 0%, var(--nn-blue-dark) 100%);
+  border-radius: 2px;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+}
+
+.nn-progress-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: .63rem;
+  color: var(--nn-muted);
+  text-align: right;
+  margin-top: 3px;
+  letter-spacing: .04em;
+}
+
+/* ════════════════════════════════════════════
+   GET IN TOUCH FORM
+════════════════════════════════════════════ */
+.nn-git-form-block {
+  padding-left: 33px;
+  margin-bottom: 16px;
+  animation: nn-chat-in .32s cubic-bezier(.34,1.4,.64,1) both;
+  animation-delay: .06s;
+}
+
+.nn-git-form-card {
+  background: var(--nn-white);
+  border: 1.5px solid var(--nn-border);
+  border-left: 3px solid var(--nn-blue);
+  border-radius: 4px var(--radius-md) var(--radius-md) var(--radius-md);
+  padding: 16px 15px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.07);
+}
+
+.nn-git-form-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--nn-text);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nn-git-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.nn-git-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nn-git-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: .68rem;
+  font-weight: 600;
+  color: var(--nn-muted);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.nn-git-input {
+  border: 1.5px solid var(--nn-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 11px;
+  font-size: .8rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--nn-text);
+  background: var(--nn-surface);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+}
+
+.nn-git-input:focus {
+  border-color: var(--nn-blue);
+  box-shadow: 0 0 0 3px rgba(0,150,230,.10);
+  background: var(--nn-white);
+}
+
+.nn-git-input.nn-git-error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239,68,68,.10);
+}
+
+.nn-git-error-msg {
+  font-size: .67rem;
+  color: #ef4444;
+  font-family: 'Outfit', sans-serif;
+  min-height: 14px;
+}
+
+.nn-git-consent-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-bottom: 14px;
+  background: var(--nn-surface);
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+  border: 1.5px solid var(--nn-border);
+  transition: border-color var(--transition);
+}
+
+.nn-git-consent-row.nn-git-error {
+  border-color: #ef4444;
+}
+
+.nn-git-checkbox {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  accent-color: var(--nn-blue);
+  cursor: pointer;
+}
+
+.nn-git-consent-label {
+  font-size: .73rem;
+  color: var(--nn-text);
+  line-height: 1.45;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.nn-git-submit-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, var(--nn-blue) 0%, var(--nn-blue-dark) 100%);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: #fff;
+  font-size: .82rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  letter-spacing: .02em;
+  transition: opacity .2s, transform .15s, box-shadow .15s;
+  box-shadow: var(--shadow-btn);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.nn-git-submit-btn:hover { opacity: .92; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,150,230,.45); }
+.nn-git-submit-btn:active { transform: scale(.98); }
+.nn-git-submit-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+.nn-git-submit-spinner {
+  width: 13px; height: 13px;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: nn-spin .7s linear infinite;
+  display: none;
+}
+
+@keyframes nn-spin {
+  to { transform: rotate(360deg); }
+}
+
+.nn-git-submit-btn.loading .nn-git-submit-spinner { display: block; }
+.nn-git-submit-btn.loading .nn-git-submit-text { opacity: .7; }
+
+/* ════════════════════════════════════════════
+   INTL-TEL-INPUT OVERRIDES — Nexus UI scoped
+════════════════════════════════════════════ */
+#nn-chatbox .iti { width: 100%; display: block; }
+
+#nn-chatbox .iti input[type="tel"] {
+  width: 100%;
+  border: 1.5px solid var(--nn-border);
+  border-radius: var(--radius-sm);
+  font-size: .8rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--nn-text);
+  background: var(--nn-surface);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+  box-sizing: border-box;
+}
+
+#nn-chatbox .iti input[type="tel"]:focus {
+  border-color: var(--nn-blue);
+  box-shadow: 0 0 0 3px rgba(0,150,230,.10);
+  background: var(--nn-white);
+}
+
+#nn-chatbox .iti input[type="tel"].nn-git-error,
+#nn-chatbox .iti input[type="tel"].error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239,68,68,.10);
+}
+
+#nn-chatbox .iti__selected-flag {
+  border-right: 1px solid var(--nn-border);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+#nn-chatbox .iti__selected-flag:hover { background: rgba(0,0,0,.04); }
+
+#nn-chatbox .iti__country-list {
+  z-index: 99999;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1.5px solid var(--nn-border);
+  border-radius: var(--radius-sm);
+  background: var(--nn-white);
+  box-shadow: 0 8px 24px rgba(0,0,0,.18);
+  font-size: .77rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  min-width: 240px;
+  max-width: 330px;
+}
+
+#nn-chatbox .iti__country-list::-webkit-scrollbar { width: 4px; }
+#nn-chatbox .iti__country-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+
+#nn-chatbox .iti__search-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: none;
+  border-bottom: 1px solid var(--nn-border);
+  font-size: .77rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  outline: none;
+  background: var(--nn-surface);
+  box-sizing: border-box;
+}
+
+#nn-chatbox .iti__country {
+  padding: 7px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background .12s;
+}
+
+#nn-chatbox .iti__country:hover,
+#nn-chatbox .iti__country.iti__highlight {
+  background: var(--nn-blue-light);
+  color: var(--nn-blue-dark);
+}
+
+#nn-chatbox .iti__dial-code { color: var(--nn-muted); font-size: .72rem; }
+
+#nn-chatbox .iti--separate-dial-code .iti__selected-dial-code {
+  font-size: .72rem;
+  color: var(--nn-text);
+  margin-left: 3px;
+}
+
+
+/* ════════════════════════════════════════════
+   TEAM CARDS COMPONENT
+════════════════════════════════════════════ */
+.nn-team-block {
+  padding-left: 33px;
+  margin-bottom: 16px;
+  animation: nn-chat-in .32s cubic-bezier(.34,1.4,.64,1) both;
+  animation-delay: .08s;
+}
+
+.nn-team-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: .65rem;
+  font-weight: 700;
+  color: var(--nn-muted);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.nn-team-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.nn-team-card {
+  background: var(--nn-white);
+  border: 1.5px solid var(--nn-border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition), box-shadow .15s, transform .12s;
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+  width: 100%;
+}
+
+.nn-team-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--nn-blue) 0%, var(--nn-blue-dark) 100%);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform .22s ease;
+  border-radius: 0 2px 2px 0;
+}
+
+.nn-team-card:hover::before { transform: scaleY(1); }
+
+.nn-team-card:hover {
+  border-color: var(--nn-blue);
+  background: var(--nn-blue-light);
+  box-shadow: 0 3px 12px rgba(0,150,230,.13);
+  transform: translateX(2px);
+}
+
+.nn-team-card:active { transform: scale(.99); }
+
+/* Avatar */
+.nn-team-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2.5px solid var(--nn-blue-light);
+  box-shadow: 0 2px 8px rgba(0,150,230,.22);
+  background: linear-gradient(135deg, var(--nn-blue) 0%, var(--nn-blue-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color .2s, box-shadow .2s;
+  position: relative;
+}
+
+.nn-team-card:hover .nn-team-avatar {
+  border-color: var(--nn-blue);
+  box-shadow: 0 3px 14px rgba(0,150,230,.38);
+}
+
+.nn-team-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+.nn-team-avatar-fallback {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: .02em;
+}
+
+/* Card body */
+.nn-team-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.nn-team-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: .86rem;
+  font-weight: 700;
+  color: var(--nn-text);
+  line-height: 1.25;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nn-team-role {
+  font-family: 'Outfit', sans-serif;
+  font-size: .7rem;
+  font-weight: 600;
+  color: var(--nn-blue);
+  letter-spacing: .02em;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nn-team-bio {
+  font-size: .73rem;
+  color: var(--nn-muted);
+  line-height: 1.5;
+  /* Collapsed by default — 2 lines */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: max-height .35s ease;
+}
+
+.nn-team-bio.expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+.nn-team-expand {
+  margin-top: 5px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .67rem;
+  font-weight: 700;
+  color: var(--nn-blue);
+  letter-spacing: .03em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transition: opacity .15s;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.nn-team-expand:hover { opacity: .75; }
+
+.nn-team-expand-arrow {
+  display: inline-block;
+  transition: transform .25s ease;
+  font-style: normal;
+}
+
+.nn-team-expand-arrow.open { transform: rotate(180deg); }
+
+/* Expand/collapse chevron icon via CSS — no extra markup */
+.nn-team-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+.nn-team-chevron {
+  color: var(--nn-muted);
+  font-size: 1.1rem;
+  transition: transform .25s ease, color .15s;
+}
+
+.nn-team-card:hover .nn-team-chevron { color: var(--nn-blue); }
+.nn-team-chevron.open { transform: rotate(90deg); }
+
+/* ════════════════════════════════════════════
+   TEAM CARDS — UPGRADED COMPONENTS
+════════════════════════════════════════════ */
+
+/* Section divider label */
+.nn-team-section-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: .65rem;
+  font-weight: 800;
+  color: var(--nn-muted);
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.nn-team-section-icon { font-size: .8rem; }
+
+/* Top row inside card body: name+role left, tag right */
+.nn-team-toprow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+
+/* Role tag pill */
+.nn-team-tag {
+  font-family: 'Outfit', sans-serif;
+  font-size: .58rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--nn-blue);
+  background: var(--nn-blue-light);
+  border: 1px solid rgba(0,150,230,.18);
+  border-radius: 20px;
+  padding: 2px 7px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+/* Action row: "Read more" + links side by side */
+.nn-team-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.nn-team-links {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+/* Small link buttons: "Full bio →" and LinkedIn */
+.nn-team-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .64rem;
+  font-weight: 600;
+  color: var(--nn-blue-dark);
+  background: var(--nn-blue-light);
+  border: 1px solid rgba(0,150,230,.2);
+  border-radius: 20px;
+  padding: 3px 8px;
+  text-decoration: none;
+  transition: background .15s, border-color .15s, color .15s;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nn-team-link-btn:hover {
+  background: var(--nn-blue);
+  color: #fff;
+  border-color: var(--nn-blue);
+}
+
+.nn-team-link-li { color: #0a66c2; border-color: rgba(10,102,194,.2); background: rgba(10,102,194,.07); }
+.nn-team-link-li:hover { background: #0a66c2; color: #fff; border-color: #0a66c2; }
+/* ════════════════════════════════════════════
+   AI ASSISTANT WIDGET
+════════════════════════════════════════════ */
+
+.nn-ai-widget{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 16px;
+  background:var(--nn-white);
+  border-top:1px solid var(--nn-border);
+  position:relative;
+}
+
+.nn-ai-helper-text{
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.nn-ai-title{
+  font-family:'Outfit',sans-serif;
+  font-size:.82rem;
+  font-weight:700;
+  color:var(--nn-text);
+  line-height:1.2;
+}
+
+.nn-ai-sub{
+  font-size:.72rem;
+  color:var(--nn-muted);
+  margin-top:2px;
+  line-height:1.4;
+}
+
+.nn-ai-chat-btn{
+  width:64px;
+  height:64px;
+  border:none;
+  border-radius:50px;
+  background:linear-gradient(135deg,#7c3aed,#5b21b6);
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  transition:all .32s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 6px 20px rgba(124,58,237,.35);
+  flex-shrink:0;
+  padding:0 16px 0 0;
+  border:2px solid rgba(255,255,255,.65);
+}
+.nn-ai-icon-img{
+   width:64px;
+  height:64px;
+  min-width:64px;
+  min-height:64px;
+  object-fit:cover;
+  border-radius:50%;
+  display:block;
+  flex-shrink:0;
+}
+
+.nn-ai-chat-btn:hover{
+    width:235px;
+  background:linear-gradient(135deg,#7c3aed,#5b21b6);
+}
+.nn-ai-chat-btn svg{
+  flex-shrink:0;
+}
+
+.nn-ai-hover-text{
+  color:#fff;
+  font-family:'Outfit',sans-serif;
+  font-size:.80rem;
+  font-weight:600;
+  white-space:nowrap;
+
+  opacity:0;
+  margin-left:14px;
+
+  transform:translateX(12px);
+  transition:all .25s ease;
+}
+
+.nn-ai-chat-btn:hover .nn-ai-hover-text{
+  opacity:1;
+  transform:translateX(0);
+}
+
+/* Mobile */
+@media (max-width:480px){
+
+ .nn-ai-widget{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-direction:row-reverse;
+  gap:12px;
+  padding:12px 16px;
+  background:var(--nn-white);
+  border-top:1px solid var(--nn-border);
+  position:relative;
+}
+
+.nn-ai-chat-btn{
+  order:1;
+}
+
+.nn-ai-helper-text{
+  order:2;
+}
+}
+</style>
+</head>
+<body>
+
+<!-- Demo backdrop -->
+<div class="demo-backdrop"></div>
+<div class="demo-label">
+  <h1>NexusNow.ai</h1>
+  <p>AI-Driven ServiceNow Solutions</p>
+</div>
+
+<!-- Launcher (UNCHANGED) -->
+<div id="nn-launcher">
+  <div id="nn-tooltip">How can we help you?</div>
+  <button id="nn-fab" aria-label="Open Nexus Assistant">
+    <svg class="icon-chat" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2C6.48 2 2 6.03 2 11c0 2.68 1.24 5.09 3.22 6.77L4 22l4.7-2.08A10.6 10.6 0 0012 20c5.52 0 10-4.03 10-9S17.52 2 12 2z" fill="white"/>
+      <circle cx="8.5"  cy="11" r="1.2" fill="#0096e6"/>
+      <circle cx="12"   cy="11" r="1.2" fill="#0096e6"/>
+      <circle cx="15.5" cy="11" r="1.2" fill="#0096e6"/>
+    </svg>
+    <svg class="icon-close" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18 6L6 18M6 6l12 12" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    <span id="nn-badge">1</span>
+  </button>
+</div>
+
+<!-- Widget Window -->
+<div id="nn-chatbox" role="dialog" aria-label="Nexus Assistant">
+
+  <!-- Header (UNCHANGED) -->
+  <div class="nn-header">
+    <div class="nn-avatar">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" fill="rgba(255,255,255,.15)"/>
+        <path d="M7 12h10M12 7l5 5-5 5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="12" cy="12" r="2" fill="white"/>
+      </svg>
+    </div>
+    <div class="nn-header-info">
+      <div class="nn-bot-name">Nexus Assistant</div>
+      <div class="nn-status">
+        <div class="nn-status-dot"></div>
+        <span class="nn-status-text">Online · Typically replies instantly</span>
+      </div>
+    </div>
+    <button class="nn-header-action" onclick="NN.restartChat()" aria-label="Restart">
+      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2" stroke-linecap="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Conversational chat body -->
+  <div id="nn-body">
+    <div id="nn-scroll-anchor"></div>
+  </div>
+
+ <!-- AI Assistant Floating Widget -->
+<div class="nn-ai-widget">
+
+  <div class="nn-ai-helper-text">
+    <div class="nn-ai-title">I’m here to help</div>
+    <div class="nn-ai-sub">
+      Ask anything about NexusNow.ai
+    </div>
+  </div>
+
+  <button class="nn-ai-chat-btn" id="open-ai-chat">
+
+  <img src="logo.png" alt="AI Assistant" class="nn-ai-icon-img">
+
+  <span class="nn-ai-hover-text">Ask me anything</span>
+
+</button>
+
+  <!-- Hidden actual input -->
+  <input
+    id="nn-text-input-hidden"
+    type="text"
+    style="position:absolute;opacity:0;pointer-events:none;"
+    onkeydown="if(event.key==='Enter')NN.handleTextInput()"
+  />
+
+</div>
+
+  <!-- Footer -->
+
+  <div class="nn-footer">
+    Powered by <a href="https://nexusnow.ai" target="_blank">NexusNow.ai</a>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════
+     JAVASCRIPT — CONVERSATIONAL CARD UI
+══════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* ─────────────────────────────────────────────
+     CONTENT DATA
+  ───────────────────────────────────────────── */
+  const CATEGORIES = [
+    {
+      id: 'about',
+      label: 'About NexusNow.ai',
+      sub: 'Company overview & mission',
+      badge: 'info',
+      badgeText: 'Overview',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+      intro: 'Learn everything about who we are, our mission, and what makes us different.',
+      faqs: [
+        { q: 'What is NexusNow.ai?', a: 'NexusNow.ai is a premier AI consulting and advisory firm specializing in AI-driven digital transformation. We help enterprises across industries integrate AI, automation, and ServiceNow platforms to achieve operational excellence and sustainable competitive advantage.' },
+        { q: 'Where are your offices located?', a: 'We operate globally with a Corporate Headquarters in Mumbai, India (BKC), a Singapore regional office at SBF Center, and a Global Delivery Center in Bengaluru, Karnataka at Awfis Vajram Esteva — enabling us to serve clients across APAC, the Middle East, and beyond.' },
+        { q: 'What is NexusNow.ai\'s mission?', a: 'Our mission is to be the trusted transformation partner that bridges the gap between AI potential and enterprise reality. We accelerate digital transformation by combining deep ServiceNow expertise with Generative AI innovation — making complex technology accessible and measurable.' },
+        { q: 'What sets NexusNow.ai apart from competitors?', a: 'Our differentiation lies in combining deep ServiceNow expertise with cutting-edge Generative AI capabilities. We build tailored AI roadmaps, close the global AI talent gap, and ensure measurable ROI — not just implementation, but enterprise-wide transformation at scale.' },
+        { q: 'Who leads NexusNow.ai?', a: 'Our leaders are industry veterans with decades of experience in enterprise technology, AI strategy, and digital transformation across Fortune 500 companies. Visit our Leaders page at nexusnow.ai/leaders to learn more about the minds shaping our vision.' }
+      ]
+    },
+    {
+      id: 'services',
+      label: 'Our Services',
+      sub: 'Full portfolio of offerings',
+      badge: 'active',
+      badgeText: 'Popular',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+      intro: 'Explore our comprehensive portfolio of enterprise services.',
+      faqs: [
+        { q: 'What advisory services do you offer?', a: 'Our Advisory Services engage expert consultants to help you navigate digital transformation complexity. We perform technology assessments, develop AI roadmaps, define governance frameworks, and drive strategic outcomes aligned with your unique business goals.' },
+        { q: 'What are AI-Powered Insights?', a: 'AI-Powered Insights is our managed IT intelligence service leveraging machine learning and predictive analytics to enable proactive decision-making, reduce downtime through predictive maintenance, and deliver continuous operational improvements at scale.' },
+        { q: 'What are Value Accelerators?', a: 'Value Accelerators are tailored quick-start programs that unlock the full potential of your ServiceNow Pro & Enterprise package. We identify high-impact opportunities, reduce implementation risk, and accelerate your time-to-value significantly.' },
+        { q: 'Do you offer Managed Services?', a: 'Yes. Our Managed Services provide a dedicated team to manage and continuously develop your ServiceNow platform — handling upgrades, optimizations, custom development, and proactive automation across your entire enterprise ecosystem.' }
+      ]
+    },
+    {
+      id: 'solutions',
+      label: 'Solutions & Platform',
+      sub: 'ServiceNow & AI solutions',
+      badge: 'new',
+      badgeText: 'New',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>`,
+      intro: 'Discover our platform-level solutions built on ServiceNow and Generative AI.',
+      faqs: [
+        { q: 'What is your Migration & Implementation approach?', a: 'We provide end-to-end ServiceNow migration and implementation — whether you\'re new to ServiceNow, re-implementing, or building custom applications. Our structured delivery methodology ensures minimal disruption and measurable success from Day 1.' },
+        { q: 'How does Workflow Automation work?', a: 'We eliminate manual processes, spreadsheet chaos, and inbox overload by deploying intelligent ServiceNow workflow applications. Our solutions enhance employee experience, reduce errors, and deliver faster, more consistent business results through smart automation.' },
+        { q: 'Do you support Generative AI integration?', a: 'Absolutely. Generative AI is core to our solution portfolio. We design and implement GenAI-powered workflows including intelligent virtual agents, document processing automation, AI-assisted decision support, and NLP interfaces within ServiceNow.' },
+        { q: 'Can you build custom ServiceNow applications?', a: 'Yes. Our expert developers build bespoke ServiceNow applications tailored to your unique processes, integrations, and compliance requirements — ensuring scalable, enterprise-grade outcomes that align with your specific business architecture.' }
+      ]
+    },
+    {
+      id: 'industries',
+      label: 'Industries We Serve',
+      sub: 'Banking, Insurance, Telecom & more',
+      badge: 'info',
+      badgeText: 'Global',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+      intro: 'We serve diverse enterprise industries across APAC and global markets.',
+      faqs: [
+        { q: 'Do you work with Banking & Financial Services?', a: 'Yes. We help banking institutions modernize core operations, automate compliance workflows, reduce operational risk, and improve customer service delivery — all while meeting stringent regulatory requirements like GDPR, MAS, and RBI guidelines.' },
+        { q: 'Do you serve the Insurance industry?', a: 'Our insurance solutions streamline claims processing, underwriting workflows, and agent experience platforms. We help insurers reduce cycle times by up to 40% and improve customer satisfaction through intelligent automation and AI-driven insights.' },
+        { q: 'What about Telecom & Manufacturing?', a: 'We support Telecom providers in automating network operations and customer workflows. For Manufacturing, we focus on predictive maintenance, supply chain visibility, and plant-floor digital transformation powered by ServiceNow and AI.' },
+        { q: 'Do you work with Retail & Supply Chain?', a: 'Yes. Our Retail and Supply Chain solutions leverage AI to improve demand forecasting, vendor management, logistics automation, and customer service — helping enterprises stay agile in dynamic market conditions.' }
+      ]
+    },
+    {
+      id: 'technology',
+      label: 'Technology & AI',
+      sub: 'Our tech stack and AI capabilities',
+      badge: 'new',
+      badgeText: 'GenAI',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/><path d="M15.54 8.46a5 5 0 010 7.07M8.46 8.46a5 5 0 000 7.07"/></svg>`,
+      intro: 'Explore the cutting-edge technologies and AI capabilities we deploy.',
+      faqs: [
+        { q: 'Which AI technologies do you leverage?', a: 'We leverage a broad AI stack including Generative AI (LLMs, RAG architectures), Machine Learning (supervised/unsupervised), Natural Language Processing, Predictive Analytics, Computer Vision, and AI Agents — all integrated within enterprise ServiceNow environments.' },
+        { q: 'Are your solutions cloud-native?', a: 'Yes. Our solutions are designed cloud-first on major platforms including AWS, Azure, and GCP. We support hybrid architectures and ensure our deployments meet enterprise security, scalability, and compliance requirements by design.' },
+        { q: 'How do you ensure AI model reliability?', a: 'We implement rigorous MLOps practices including continuous model monitoring, drift detection, and regular retraining pipelines. All AI models go through validation frameworks before deployment to ensure accuracy, fairness, and business alignment.' }
+      ]
+    },
+    {
+      id: 'engagement',
+      label: 'Engagement & Pricing',
+      sub: 'Models, timelines & pricing',
+      badge: 'info',
+      badgeText: 'Pricing',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
+      intro: 'Understand how we work with clients — from first contact to delivery.',
+      faqs: [
+        { q: 'What engagement models do you offer?', a: 'We offer Fixed-Price Projects, Time & Materials (T&M), Dedicated Teams (Extended Workforce), and Outcome-Based Partnerships. We recommend the right model based on your project scope, risk profile, and strategic goals.' },
+        { q: 'How long does a typical engagement take?', a: 'Our Value Accelerator quick-starts deliver initial value in 4–8 weeks. Full migration and implementation projects typically range from 3–9 months. Managed services engagements are ongoing with defined SLAs and regular business reviews.' },
+        { q: 'How is pricing structured?', a: 'Pricing is customized based on project complexity, team size, engagement duration, and deliverables. We provide transparent, detailed proposals with no hidden costs. Schedule a consultation to receive a tailored commercial framework.' }
+      ]
+    },
+    {
+      id: 'learning',
+      label: 'Learning & Training',
+      sub: 'AI & ServiceNow training programs',
+      badge: 'active',
+      badgeText: 'Live',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`,
+      intro: 'Explore our learning programs designed to build in-house AI capability.',
+      faqs: [
+        { q: 'Does NexusNow offer AI training programs?', a: 'Yes. Our Learning division offers structured AI and ServiceNow training including hands-on workshops, certification prep, custom bootcamps, and AI literacy programs for both business leaders and technical teams.' },
+        { q: 'Do you help bridge the global AI talent gap?', a: 'This is core to our mission. We design tailored talent development programs that equip organizations with in-house AI capability — reducing long-term dependency on external consultants and building sustainable internal expertise.' }
+      ]
+    },
+    {
+      id: 'careers',
+      label: 'Careers at NexusNow',
+      sub: 'Join our growing team',
+      badge: 'active',
+      badgeText: 'Hiring',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="12.01"/></svg>`,
+      intro: 'Interested in building the future of AI and ServiceNow with us?',
+      faqs: [
+        { q: 'What roles do you typically hire for?', a: 'We hire ServiceNow Architects & Developers, AI/ML Engineers, Data Scientists, Solution Consultants, Project Managers, Pre-Sales Architects, and Business Development professionals across our global offices.' },
+        { q: 'What is the culture like at NexusNow.ai?', a: 'We foster an innovation-first, collaborative, and inclusive culture. Team members work on cutting-edge AI and ServiceNow challenges across global clients, with strong mentorship from industry leaders and continuous learning opportunities.' },
+        { q: 'How can I apply?', a: 'Visit nexusnow.ai/careers to explore current openings. For senior or specialized roles, reach out directly at info@nexusnow.ai with your profile and area of interest.' }
+      ]
+    },
+    {
+      id: 'contact',
+      label: 'Contact & Support',
+      sub: 'Get in touch with our team',
+      badge: 'active',
+      badgeText: 'Support',
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.79 19.79 0 01.4 1.12 2 2 0 012 .18h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92v2z"/></svg>`,
+      intro: 'Find all the ways to reach us and the support we provide.',
+      faqs: [
+        { q: 'How do I contact NexusNow.ai?', a: 'Email: info@nexusnow.ai | Phone: +91 98453 92147\nMumbai HQ: ONE BKC, Bandra Kurla Complex, 17th Floor\nBengaluru: Awfis Vajram Esteva, Marathahalli-Sarjapur ORR\nSingapore: SBF Center, 160 Robinson Road, Suite #10-01' },
+        { q: 'How do I schedule a consultation?', a: 'Visit nexusnow.ai/contact-us to submit an inquiry or schedule a discovery call. Our team typically responds within one business day to set up a consultation tailored to your business needs and goals.' },
+        { q: 'What support do existing clients receive?', a: 'Existing clients receive dedicated support through defined SLAs, named account managers, a 24/7 support portal, and regular business reviews. Managed Services clients have a dedicated DevOps team for ongoing platform excellence.' }
+      ]
+    }
+  ];
+
+  /* ─────────────────────────────────────────────
+     STATE
+  ───────────────────────────────────────────── */
+  const state = {
+    open: false,
+    initialized: false,
+    messages: []  // conversation history array
+  };
+
+  /* ─────────────────────────────────────────────
+     DOM REFS
+  ───────────────────────────────────────────── */
+  const $box   = document.getElementById('nn-chatbox');
+  const $fab   = document.getElementById('nn-fab');
+  const $badge = document.getElementById('nn-badge');
+  const $body  = document.getElementById('nn-body');
+  const $anchor = document.getElementById('nn-scroll-anchor');
+
+  /* ─────────────────────────────────────────────
+     TIME HELPERS
+  ───────────────────────────────────────────── */
+  function nowTime() {
+    const d = new Date();
+    let h = d.getHours(), m = d.getMinutes();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${h}:${String(m).padStart(2,'0')} ${ampm}`;
+  }
+
+  /* ─────────────────────────────────────────────
+     SCROLL HELPERS
+
+     SCROLL ARCHITECTURE (read before modifying):
+     ─────────────────────────────────────────────
+     There is exactly ONE scroll trigger per user interaction:
+       → renderUserSelection() scrolls to the top of the user bubble.
+         All content rendered after it (typing indicator, bot message,
+         answer block, chips, view-all) appears below it silently.
+         The user scrolls down manually to read the response.
+
+     scrollToElement() is reserved for renderHome(isRestart=true)
+     only — to reset the container to top on a full chat restart.
+
+     ✅ DO NOT add scroll calls anywhere else.
+     ✅ DO NOT use scrollToBottom()         — jumps past content.
+     ✅ DO NOT use element.scrollIntoView() — unreliable in clipped containers.
+     ✅ DO NOT use $body.scrollTop = $body.scrollHeight — same as scrollToBottom.
+  ───────────────────────────────────────────── */
+
+  /**
+   * scrollToElement(el)
+   * Scrolls #nn-body so the top of `el` aligns to the container top.
+   * Uses getBoundingClientRect() — reliable inside overflow:auto containers.
+   * ONLY called by renderHome(isRestart=true).
+   */
+  function scrollToElement(el) {
+    requestAnimationFrame(() => {
+      const containerRect = $body.getBoundingClientRect();
+      const elRect        = el.getBoundingClientRect();
+      const scrollTarget  = $body.scrollTop + (elRect.top - containerRect.top) - 8;
+      $body.scrollTo({ top: scrollTarget, behavior: 'smooth' });
+    });
+  }
+
+  /* ─────────────────────────────────────────────
+     BOT AVATAR (small)
+  ───────────────────────────────────────────── */
+  function botAvatarSm() {
+    return `<div class="nn-bot-avatar-sm">
+      <svg viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" fill="rgba(255,255,255,.2)"/>
+        <circle cx="12" cy="12" r="2" fill="white"/>
+      </svg>
+    </div>`;
+  }
+
+  /* ─────────────────────────────────────────────
+     RENDER: BOT MESSAGE
+     Shows a typing indicator for `delay`ms, then
+     replaces it with the bot's speech bubble.
+     ❌ No scroll — renderUserSelection owns scroll.
+  ───────────────────────────────────────────── */
+  function renderBotMessage(html, delay = 0) {
+    return new Promise(resolve => {
+      const time = nowTime();
+
+      // Show animated typing indicator while "thinking"
+      const typingEl = document.createElement('div');
+      typingEl.className = 'nn-typing-row';
+      typingEl.innerHTML = `
+        ${botAvatarSm()}
+        <div class="nn-typing-bubble">
+          <div class="nn-dot"></div>
+          <div class="nn-dot"></div>
+          <div class="nn-dot"></div>
+        </div>`;
+      $body.insertBefore(typingEl, $anchor);
+      // ❌ NO scroll — typing indicator appears silently below the user bubble.
+
+      setTimeout(() => {
+        // Replace typing indicator with the actual bot message bubble
+        typingEl.remove();
+        const block = document.createElement('div');
+        block.className = 'nn-chat-block';
+        block.innerHTML = `
+          <div class="nn-bot-row">
+            ${botAvatarSm()}
+            <div class="nn-bot-bubble">${html}</div>
+          </div>
+          <div class="nn-msg-time">${time}</div>`;
+        $body.insertBefore(block, $anchor);
+        // ❌ NO scroll — bot message renders silently; user scrolls down manually.
+        resolve();
+      }, delay || 600);
+    });
+  }
+
+  /* ─────────────────────────────────────────────
+     RENDER: USER SELECTION
+     Appends the user's chosen question/action as
+     a right-aligned bubble, then scrolls so its
+     top is visible. This is the ONLY scroll call
+     in the entire interaction — all subsequent
+     content (bot reply, answer, chips) loads
+     silently below it.
+  ───────────────────────────────────────────── */
+  function renderUserSelection(text) {
+    const time    = nowTime();
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = `
+      <div class="nn-user-row">
+        <div class="nn-user-bubble">${text}</div>
+      </div>
+      <div class="nn-msg-time right">${time}</div>`;
+
+    // Insert both the bubble and its timestamp into the chat stream
+    const elements = Array.from(wrapper.children);
+    elements.forEach(child => {
+      $body.insertBefore(child, $anchor);
+    });
+
+    // ✅ THE ONLY SCROLL IN THE INTERACTION
+    // Aligns the top of the user bubble to the top of #nn-body (minus 8px breathing room).
+    // After this fires, NO further scroll happens — user reads the response by scrolling down.
+    const userBubble = elements[0];
+    setTimeout(() => {
+      const containerRect = $body.getBoundingClientRect();
+      const elRect        = userBubble.getBoundingClientRect();
+      const scrollTarget  = $body.scrollTop + (elRect.top - containerRect.top) - 8;
+      $body.scrollTo({ top: scrollTarget, behavior: 'smooth' });
+    }, 50); // 50ms delay lets the DOM paint the bubble before measuring its position
+  }
+
+  /* ─────────────────────────────────────────────
+     RENDER: CARD LIST
+     Renders a labelled grid of clickable cards
+     after a short delay. Appends below whatever
+     is already in the chat stream.
+     ❌ No scroll — user scrolls down manually.
+  ───────────────────────────────────────────── */
+  function renderCardList(label, cards, delay = 0) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'nn-card-list-block';
+
+        const cardsHTML = cards.map(card => `
+          <button class="nn-card" onclick="${card.onclick}" id="${card.id || ''}">
+            <div class="nn-card-icon">${card.icon}</div>
+            <div class="nn-card-content">
+              <div class="nn-card-title">${card.title}</div>
+              <div class="nn-card-sub">${card.sub}</div>
+            </div>
+            <div class="nn-card-right">
+              ${card.badge ? `<span class="nn-badge nn-badge-${card.badge}">${card.badgeText}</span>` : ''}
+              <span class="nn-card-arrow">›</span>
+            </div>
+          </button>`).join('');
+
+        el.innerHTML = `
+          <div class="nn-card-list-label">${label}</div>
+          <div class="nn-cards">${cardsHTML}</div>`;
+
+        $body.insertBefore(el, $anchor);
+        // ❌ NO scroll — card lists are intermediate content; user scrolls down to read them.
+        resolve(el);
+      }, delay);
+    });
+  }
+
+  /* ─────────────────────────────────────────────
+     RENDER: ANSWER BLOCK
+     Renders the structured answer card containing
+     the repeated question label and full answer text.
+     Appends below bot message — no scroll triggered.
+     ❌ No scroll — renderUserSelection already scrolled
+        to the user bubble; the answer is just below it.
+  ───────────────────────────────────────────── */
+  function renderAnswerBlock(question, answer, delay = 0) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'nn-answer-block';
+        el.innerHTML = `
+          <div class="nn-answer-card nn-answer-bubble">
+            <div class="nn-answer-q-label">Your Question</div>
+            <div class="nn-answer-q-text">${question}</div>
+            <div class="nn-answer-divider"></div>
+            <div class="nn-answer-text">${answer.replace(/\n/g, '<br>')}</div>
+          </div>`;
+        $body.insertBefore(el, $anchor);
+        // ❌ NO scroll — renderUserSelection owns the single scroll for this interaction.
+        //    The answer renders directly below the bot message the user can already see.
+        resolve();
+      }, delay);
+    });
+  }
+
+  /* ─────────────────────────────────────────────
+     RENDER: CHIPS BLOCK
+     Renders a row of quick-reply topic chip buttons
+     below the answer. User scrolls to discover them.
+     ❌ No scroll — chips are below the fold by design.
+  ───────────────────────────────────────────── */
+  function renderChips(label, chips, delay = 0) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'nn-chips-block';
+        const chipsHTML = chips.map(c =>
+          `<button class="nn-chip ${c.cls || ''}" onclick="${c.onclick}">${c.label}</button>`
+        ).join('');
+        el.innerHTML = `
+          <div class="nn-chips-label">${label}</div>
+          <div class="nn-chips-row">${chipsHTML}</div>`;
+        $body.insertBefore(el, $anchor);
+        // ❌ NO scroll — chips sit below the answer; user scrolls down to see them.
+        resolve();
+      }, delay);
+    });
+  }
+
+  /* ─────────────────────────────────────────────
+     RENDER: VIEW ALL BUTTON
+     Appends a dashed "View all topics" button at
+     the bottom of the current content stream.
+     ❌ No scroll — sits below chips; user scrolls to it.
+  ───────────────────────────────────────────── */
+  function renderViewAll(label, onclick, delay = 0) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'nn-view-all-block';
+        el.innerHTML = `
+          <button class="nn-view-all-btn" onclick="${onclick}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+              <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+              <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+            ${label}
+          </button>`;
+        $body.insertBefore(el, $anchor);
+        // ❌ NO scroll — View All is the last item; user scrolls down to discover it.
+        resolve();
+      }, delay);
+    });
+  }
+
+  /* ─────────────────────────────────────────────
+     MARK CARD AS SELECTED
+  ───────────────────────────────────────────── */
+  function markCardSelected(cardId) {
+    if (cardId) {
+      const el = document.getElementById(cardId);
+      if (el) el.classList.add('selected');
+    }
+  }
+
+  /* ─────────────────────────────────────────────
+     HOME FLOW
+     Renders the welcome screen: greeting message,
+     4 featured topic cards, and a "View all" button.
+     On restart: clears all chat nodes and resets
+     the scroll position to the container top first.
+  ───────────────────────────────────────────── */
+  async function renderHome(isRestart = false) {
+    if (isRestart) {
+      // Remove all rendered chat nodes except the scroll anchor
+      const children = Array.from($body.children);
+      children.forEach(c => { if (c.id !== 'nn-scroll-anchor') c.remove(); });
+      state.messages = [];
+      // Reset container to top — the only time we scroll outside of user selection
+      $body.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Welcome bot message
+    await renderBotMessage(
+      `👋 <strong>Hello! Welcome to Nexus Assistant.</strong><br>
+       I'm here to help you explore our AI &amp; ServiceNow solutions.<br>
+       What would you like to know today?`,
+      500
+    );
+
+    // Suggested actions
+    const featuredCats = CATEGORIES.slice(0, 4);
+    await renderCardList('✨ Suggested Topics', featuredCats.map((cat, i) => ({
+      id: `home-cat-${i}`,
+      icon: cat.icon,
+      title: cat.label,
+      sub: cat.sub,
+      badge: cat.badge,
+      badgeText: cat.badgeText,
+      onclick: `NN.selectCategory(${CATEGORIES.indexOf(cat)}, 'home-cat-${i}')`
+    })), 200);
+
+    // View all
+    await renderViewAll('View all topics', 'NN.showAllCategories()', 100);
+  }
+
+  /* ─────────────────────────────────────────────
+     CATEGORY FLOW
+     showAllCategories: Triggered by "View all topics".
+       Scrolls to user bubble, then renders all topic cards.
+     selectCategory: Triggered by a topic card click.
+       Scrolls to user bubble, then renders FAQ cards for
+       that category, followed by "Explore other topics" chips.
+  ───────────────────────────────────────────── */
+  async function showAllCategories() {
+    renderUserSelection('View all topics');
+
+    await renderBotMessage(
+      `Here are all the topics I can help you with. Pick one to get started:`,
+      700
+    );
+
+    await renderCardList('📚 All Topics', CATEGORIES.map((cat, i) => ({
+      id: `all-cat-${i}`,
+      icon: cat.icon,
+      title: cat.label,
+      sub: cat.sub,
+      badge: cat.badge,
+      badgeText: cat.badgeText,
+      onclick: `NN.selectCategory(${i}, 'all-cat-${i}')`
+    })), 200);
+  }
+
+  async function selectCategory(catIndex, cardId) {
+    const cat = CATEGORIES[catIndex];
+    markCardSelected(cardId);
+    renderUserSelection(cat.label);
+
+    await renderBotMessage(
+      `Great choice! I found <strong>${cat.faqs.length} frequently asked questions</strong> about <strong>${cat.label}</strong>.<br>
+       <span style="font-size:.76rem;color:var(--nn-muted)">${cat.intro}</span>`,
+      700
+    );
+
+    const faqCards = cat.faqs.map((faq, i) => ({
+      id: `faq-${catIndex}-${i}`,
+      icon: `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/>
+      </svg>`,
+      title: faq.q,
+      sub: cat.label,
+      badge: null,
+      onclick: `NN.selectFAQ(${catIndex}, ${i}, 'faq-${catIndex}-${i}')`
+    }));
+
+    await renderCardList(`❓ Questions about ${cat.label}`, faqCards, 300);
+
+    // Show other topics as chips
+    const otherCats = CATEGORIES.filter((_, i) => i !== catIndex).slice(0, 4);
+    await renderChips('Explore other topics', [
+      ...otherCats.map((c, i) => ({
+        label: c.label,
+        onclick: `NN.selectCategory(${CATEGORIES.indexOf(c)}, null)`
+      })),
+      { label: '⌂ Main Menu', cls: 'home-chip', onclick: 'NN.restartChat()' }
+    ], 200);
+  }
+
+  /* ─────────────────────────────────────────────
+     FAQ ANSWER FLOW
+     selectFAQ: Triggered when user clicks a question card.
+     Sequence (all NO-SCROLL except the user bubble):
+       1. renderUserSelection → ✅ scrolls to user bubble (single scroll)
+       2. renderBotMessage    → ❌ typing indicator + bot reply, no scroll
+       3. renderAnswerBlock   → ❌ answer card, no scroll
+       4. renderBotMessage    → ❌ "related questions" prompt, no scroll
+       5. renderCardList      → ❌ 2 related FAQ cards, no scroll
+       6. renderChips         → ❌ other topic chips, no scroll
+       7. renderViewAll       → ❌ "See all topics" button, no scroll
+  ───────────────────────────────────────────── */
+  async function selectFAQ(catIndex, faqIndex, cardId) {
+    const cat = CATEGORIES[catIndex];
+    const faq = cat.faqs[faqIndex];
+    markCardSelected(cardId);
+    renderUserSelection(faq.q);
+
+    // Show typing then answer
+    await renderBotMessage(`Here's what I found for you:`, 700);
+    await renderAnswerBlock(faq.q, faq.a, 200);
+
+    // More questions in same category
+    const moreFaqs = cat.faqs.filter((_, i) => i !== faqIndex).slice(0, 2);
+    if (moreFaqs.length > 0) {
+      await renderBotMessage(`Want to know more about <strong>${cat.label}</strong>? Here are related questions:`, 600);
+      await renderCardList(`More in ${cat.label}`, moreFaqs.map((f, i) => {
+        const realIdx = cat.faqs.indexOf(f);
+        return {
+          id: `more-faq-${catIndex}-${realIdx}`,
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/>
+          </svg>`,
+          title: f.q,
+          sub: cat.label,
+          badge: null,
+          onclick: `NN.selectFAQ(${catIndex}, ${realIdx}, 'more-faq-${catIndex}-${realIdx}')`
+        };
+      }), 200);
+    }
+
+    // Related categories
+    const relatedCats = CATEGORIES.filter((_, i) => i !== catIndex).slice(0, 4);
+    await renderChips('Explore other topics', [
+      ...relatedCats.map(c => ({
+        label: c.label,
+        onclick: `NN.selectCategory(${CATEGORIES.indexOf(c)}, null)`
+      })),
+      { label: '⌂ Main Menu', cls: 'home-chip', onclick: 'NN.restartChat()' }
+    ], 300);
+
+    await renderViewAll('See all topics', 'NN.showAllCategories()', 100);
+  }
+
+  /* ─────────────────────────────────────────────
+     RESTART / RESET
+     Clears all chat content and re-renders the
+     home screen from scratch. Triggered by the
+     home icon button in the header.
+  ───────────────────────────────────────────── */
+  async function restartChat() {
+    renderHome(true);
+  }
+
+  /* ─────────────────────────────────────────────
+     TOGGLE
+     Opens / closes the chat widget. On first open,
+     initializes the home flow. Badge is hidden once
+     the widget is opened.
+  ───────────────────────────────────────────── */
+  function toggle() {
+    state.open = !state.open;
+    $box.classList.toggle('open', state.open);
+    $fab.classList.toggle('open', state.open);
+
+    if (state.open) {
+      $badge.classList.add('hidden');
+      if (!state.initialized) {
+        state.initialized = true;
+        renderHome(false);
+      }
+    }
+  }
+
+  /* ─────────────────────────────────────────────
+     CONFIGURATION — UPDATE THESE BEFORE GOING LIVE
+  ───────────────────────────────────────────── */
+  const CONFIG = {
+    // WhatsApp number (with country code, no +)
+    whatsappNumber: '919912618285',
+
+    // EmailJS service & template IDs
+    emailjsServiceId: 'service_nd3fy3g',
+    emailjsTemplateId: 'template_4uxas12',
+
+    // Admin email — receives a copy of every booking notification
+    adminEmail: 'sriramthirumalasetty444@gmail.com',
+
+    // Auto-trigger consultation after N interactions
+    consultationTriggerAfter: 2
+  };
+
+  /* ─────────────────────────────────────────────
+     GLOBAL LEAD DATA OBJECT
+     Mirrors `lead` — exposed on window for external
+     access and for the sendEmail helpers.
+  ───────────────────────────────────────────── */
+  let leadData = {
+    name: '', email: '', phone: '', company: '',
+    requirement: '', preferred_date: '', preferred_time: ''
+  };
+
+  /* ─────────────────────────────────────────────
+     EMAILJS INTEGRATION
+     Sends a notification email via EmailJS.
+     `toEmail` can be the admin address or the
+     user's own email for a confirmation copy.
+  ───────────────────────────────────────────── */
+  function sendEmail(data, toEmail) {
+    if (!CONFIG.emailjsServiceId || !CONFIG.emailjsTemplateId) {
+      console.warn('NexusNow: EmailJS service/template ID not configured.');
+      return;
+    }
+    emailjs.send(
+      CONFIG.emailjsServiceId,
+      CONFIG.emailjsTemplateId,
+      {
+        to_email:       toEmail,
+        name:           data.name,
+        email:          data.email,
+        phone:          data.phone,
+        company:        data.company,
+        requirement:    data.requirement,
+        preferred_date: data.preferred_date,
+        preferred_time: data.preferred_time,
+        timestamp:      new Date().toLocaleString('en-IN')
+      }
+    ).catch(err => console.warn('NexusNow: EmailJS error (to ' + toEmail + '):', err));
+  }
+
+  /* ─────────────────────────────────────────────
+     LEAD STATE
+     `lead` is the internal mutable object used by
+     the chatbot flow. After each field is captured,
+     `leadData` (the global export) is kept in sync.
+  ───────────────────────────────────────────── */
+  const lead = {
+    name: '', email: '', phone: '', company: '',
+    requirement: '', preferred_date: '', preferred_time: '',
+    step: 0
+  };
+
+  /* Sync internal `lead` fields → global `leadData` */
+  function syncLeadData() {
+  leadData.name = lead.name;
+  leadData.email = lead.email;
+  leadData.phone = lead.phone;
+  leadData.company = lead.company;
+  leadData.requirement = lead.requirement;
+  leadData.preferred_date = lead.preferred_date;
+  leadData.preferred_time = lead.preferred_time;
+}
+
+  let interactionCount = 0;
+  let consultationShown = false;
+  let activeInputId = null;   // tracks current input step element id
+
+  const LEAD_STEPS = [
+    { key: 'name',      label: 'Your full name',          placeholder: 'e.g. Rahul Sharma',        type: 'text' },
+    { key: 'email',     label: 'Your business email',     placeholder: 'e.g. rahul@company.com',   type: 'email' },
+    { key: 'phone',     label: 'Your phone number',       placeholder: 'e.g. 9876543210 or +91…',  type: 'tel' },
+    { key: 'company',   label: 'Your company / organisation', placeholder: 'e.g. Acme Corp',       type: 'text' },
+    { key: 'requirement', label: 'Brief requirement',     placeholder: 'Tell us what you need…',   type: 'textarea' },
+  ];
+
+  /* ─────────────────────────────────────────────
+     VALIDATION HELPERS
+  ───────────────────────────────────────────── */
+  function validateField(key, value) {
+    if (!value.trim()) return 'This field is required.';
+    if (key === 'email') {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Please enter a valid email address.';
+    }
+    if (key === 'phone') {
+      const stripped = value.replace(/\s/g, '');
+      if (!/^(\+91\d{10}|\d{10})$/.test(stripped)) return 'Enter a 10-digit number or +91XXXXXXXXXX.';
+    }
+    return null;
+  }
+
+  /* ─────────────────────────────────────────────
+     RENDER: INPUT STEP
+  ───────────────────────────────────────────── */
+  function renderLeadInput(stepDef, stepNum, totalSteps, delay = 0) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        // Progress bar
+        const pct = Math.round((stepNum / totalSteps) * 100);
+        const progEl = document.createElement('div');
+        progEl.className = 'nn-progress-block';
+        progEl.innerHTML = `
+          <div class="nn-progress-bar">
+            <div class="nn-progress-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="nn-progress-label">Step ${stepNum} of ${totalSteps}</div>`;
+        $body.insertBefore(progEl, $anchor);
+
+        const inputId = `nn-lead-input-${Date.now()}`;
+        activeInputId = inputId;
+        const isTextarea = stepDef.type === 'textarea';
+
+        const el = document.createElement('div');
+        el.className = 'nn-input-block';
+        el.id = `nn-lead-block-${inputId}`;
+        el.innerHTML = `
+          <div class="nn-input-field-wrap" style="flex-direction:${isTextarea ? 'column' : 'row'}">
+            ${isTextarea
+              ? `<textarea id="${inputId}" class="nn-input-field" rows="3" placeholder="${stepDef.placeholder}"
+                   style="resize:none;border-radius:var(--radius-sm);line-height:1.5;"></textarea>`
+              : `<input id="${inputId}" type="${stepDef.type}" class="nn-input-field" placeholder="${stepDef.placeholder}" />`
+            }
+            <div style="display:flex;gap:6px;margin-top:${isTextarea ? '6px' : '0'}">
+              ${stepNum > 1
+                ? `<button class="nn-input-send-btn" style="background:var(--nn-surface);color:var(--nn-text);border:1.5px solid var(--nn-border);"
+                     onclick="NN.leadBack()">← Back</button>`
+                : ''}
+              <button class="nn-input-send-btn" id="send-${inputId}"
+                onclick="NN.submitLeadStep('${inputId}','${stepDef.key}')">
+                ${stepNum === totalSteps ? 'Next →' : 'Next →'}
+              </button>
+            </div>
+          </div>
+          <div class="nn-input-error-msg" id="err-${inputId}"></div>`;
+
+        $body.insertBefore(el, $anchor);
+
+        // Focus the input; init iti for phone step
+        setTimeout(() => {
+          const inp = document.getElementById(inputId);
+          if (inp) {
+            // ── intl-tel-input: initialise for phone step ──
+            if (stepDef.key === 'phone') {
+              const leadIti = window.intlTelInput(inp, {
+                initialCountry: "in",
+                separateDialCode: true,
+                preferredCountries: ["in", "us", "gb"],
+                utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/js/utils.js"
+              });
+              inp._iti = leadIti;
+            } else {
+              inp.focus();
+            }
+            inp.addEventListener('keydown', e => {
+              if (e.key === 'Enter' && !isTextarea) {
+                e.preventDefault();
+                NN.submitLeadStep(inputId, stepDef.key);
+              }
+            });
+          }
+        }, 80);
+
+        resolve(el);
+      }, delay);
+    });
+  }
+
+  /* ─────────────────────────────────────────────
+     LEAD STEP SUBMIT
+  ───────────────────────────────────────────── */
+  async function submitLeadStep(inputId, key) {
+    const inp = document.getElementById(inputId);
+    if (!inp) return;
+    // ── intl-tel-input: get full number for phone step ──
+    let value;
+    if (key === 'phone' && inp._iti) {
+      value = inp._iti.getNumber();
+      // Validate using iti
+      if (!inp.value.trim()) {
+        const errEl = document.getElementById(`err-${inputId}`);
+        inp.classList.add('error');
+        if (errEl) errEl.textContent = 'This field is required.';
+        return;
+      }
+      if (!inp._iti.isValidNumber()) {
+        const errEl = document.getElementById(`err-${inputId}`);
+        inp.classList.add('error');
+        if (errEl) errEl.textContent = 'Enter a valid phone number with country code.';
+        return;
+      }
+      inp.classList.remove('error');
+      const errEl = document.getElementById(`err-${inputId}`);
+      if (errEl) errEl.textContent = '';
+    } else {
+      value = inp.value.trim();
+    }
+
+    // Validate (non-phone fields)
+    const err = key === 'phone' ? null : validateField(key, value);
+    const errEl = document.getElementById(`err-${inputId}`);
+    if (err) {
+      inp.classList.add('error');
+      if (errEl) errEl.textContent = err;
+      return;
+    }
+    inp.classList.remove('error');
+    if (errEl) errEl.textContent = '';
+
+    // Disable input block
+    const block = document.getElementById(`nn-lead-block-${inputId}`);
+    if (block) {
+      inp.disabled = true;
+      const btn = document.getElementById(`send-${inputId}`);
+      if (btn) btn.disabled = true;
+    }
+
+    // Store value and sync global leadData
+    lead[key] = value;
+    syncLeadData();
+    renderUserSelection(value);
+
+    lead.step++;
+
+    if (lead.step < LEAD_STEPS.length) {
+      // Next step
+      const next = LEAD_STEPS[lead.step];
+      await renderBotMessage(`Got it! Now, ${next.label}:`, 700);
+      await renderLeadInput(next, lead.step + 1, LEAD_STEPS.length, 200);
+    } else {
+      // All text fields done — now scheduling
+      await renderBotMessage(`Almost there! Let's pick a date and time for your consultation.`, 800);
+      await renderDatePicker();
+    }
+  }
+
+  /* ─────────────────────────────────────────────
+     LEAD BACK
+  ───────────────────────────────────────────── */
+  async function leadBack() {
+    if (lead.step <= 0) return;
+    lead.step--;
+
+    // Clear last two elements before anchor (progress + input block)
+    for (let i = 0; i < 4; i++) {
+      const prev = $anchor.previousElementSibling;
+      if (prev && prev.id !== 'nn-scroll-anchor') prev.remove();
+      else break;
+    }
+
+    const step = LEAD_STEPS[lead.step];
+    await renderBotMessage(`No problem! Let's go back. ${step.label}:`, 500);
+    await renderLeadInput(step, lead.step + 1, LEAD_STEPS.length, 200);
+  }
+
+  /* ─────────────────────────────────────────────
+     DATE PICKER
+  ───────────────────────────────────────────── */
+  async function renderDatePicker() {
+    // Generate next 7 weekdays
+    const dates = [];
+    let d = new Date();
+    while (dates.length < 6) {
+      d.setDate(d.getDate() + 1);
+      if (d.getDay() !== 0 && d.getDay() !== 6) {
+        const label = d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+        const value = d.toISOString().split('T')[0];
+        dates.push({ label, value });
+      }
+    }
+
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'nn-input-block';
+        el.id = 'nn-date-picker';
+
+        const chipsHTML = dates.map(d =>
+          `<button class="nn-time-chip" onclick="NN.selectDate('${d.value}','${d.label}',this)">${d.label}</button>`
+        ).join('');
+
+        el.innerHTML = `
+          <div class="nn-card-list-label">📅 PREFERRED DATE</div>
+          <div class="nn-time-grid" style="grid-template-columns:1fr 1fr 1fr">${chipsHTML}</div>`;
+        $body.insertBefore(el, $anchor);
+        resolve();
+      }, 300);
+    });
+  }
+
+  async function selectDate(value, label, btn) {
+    // Disable all date chips
+    document.querySelectorAll('#nn-date-picker .nn-time-chip').forEach(c => {
+      c.disabled = true; c.classList.remove('selected');
+    });
+    btn.classList.add('selected');
+    lead.preferred_date = label;
+    syncLeadData();
+
+    renderUserSelection(`📅 ${label}`);
+    await renderBotMessage(`Great! Now, what time works best for you?`, 700);
+    await renderTimePicker();
+  }
+
+  /* ─────────────────────────────────────────────
+     TIME PICKER
+  ───────────────────────────────────────────── */
+  async function renderTimePicker() {
+    const slots = [
+      '9:00 AM', '10:00 AM', '11:00 AM',
+      '12:00 PM', '2:00 PM', '3:00 PM',
+      '4:00 PM', '5:00 PM', '6:00 PM'
+    ];
+
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'nn-input-block';
+        el.id = 'nn-time-picker';
+
+        const chipsHTML = slots.map(s =>
+          `<button class="nn-time-chip" onclick="NN.selectTime('${s}',this)">${s}</button>`
+        ).join('');
+
+        el.innerHTML = `
+          <div class="nn-card-list-label">🕐 PREFERRED TIME (IST)</div>
+          <div class="nn-time-grid">${chipsHTML}</div>`;
+        $body.insertBefore(el, $anchor);
+        resolve();
+      }, 300);
+    });
+  }
+
+  async function selectTime(slot, btn) {
+    document.querySelectorAll('#nn-time-picker .nn-time-chip').forEach(c => {
+      c.disabled = true; c.classList.remove('selected');
+    });
+    btn.classList.add('selected');
+    lead.preferred_time = slot;
+    syncLeadData();
+
+    renderUserSelection(`🕐 ${slot}`);
+    await renderBotMessage(
+      `Perfect! Here's a summary of your consultation request:<br>
+       <strong>Name:</strong> ${lead.name}<br>
+       <strong>Email:</strong> ${lead.email}<br>
+       <strong>Phone:</strong> ${lead.phone}<br>
+       <strong>Company:</strong> ${lead.company}<br>
+       <strong>Requirement:</strong> ${lead.requirement}<br>
+       <strong>Date:</strong> ${lead.preferred_date} &nbsp;|&nbsp; <strong>Time:</strong> ${lead.preferred_time}`,
+      800
+    );
+    await renderConfirmActions();
+  }
+
+  /* ─────────────────────────────────────────────
+     CONFIRM ACTIONS (Confirm / WhatsApp)
+  ───────────────────────────────────────────── */
+  async function renderConfirmActions() {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'nn-action-block';
+        el.id = 'nn-confirm-actions';
+        el.innerHTML = `
+          <div class="nn-action-row">
+            <button class="nn-action-btn primary" id="nn-confirm-btn" onclick="NN.confirmBooking(this)">
+              ✅ Confirm Booking
+            </button>
+            <button class="nn-action-btn whatsapp" onclick="NN.openWhatsApp()">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.116.553 4.103 1.522 5.834L.536 21.964a1 1 0 001.218 1.218l4.13-.986A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.907 0-3.703-.499-5.267-1.371l-.375-.214-3.886.927.928-3.887-.213-.374A9.96 9.96 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+              Chat on WhatsApp
+            </button>
+            <button class="nn-action-btn secondary" onclick="NN.restartChat()">← Start Over</button>
+          </div>`;
+        $body.insertBefore(el, $anchor);
+        resolve();
+      }, 400);
+    });
+  }
+
+  /* ─────────────────────────────────────────────
+     CONFIRM BOOKING — EmailJS
+     1. Sends notification email to admin
+     2. Sends confirmation email to the user
+     3. Falls back gracefully if either service fails
+  ───────────────────────────────────────────── */
+  async function confirmBooking(btn) {
+    if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+
+    // Ensure global leadData is current before submitting
+    syncLeadData();
+
+    const timestamp = new Date().toLocaleString('en-IN');
+    const payload   = { ...lead, timestamp };
+
+    // ── Save to localStorage as offline backup ──
+    try {
+      const existing = JSON.parse(localStorage.getItem('nn_leads') || '[]');
+      existing.push(payload);
+      localStorage.setItem('nn_leads', JSON.stringify(existing));
+    } catch(e) { /* storage unavailable — silently skip */ }
+
+    // ── 1. EmailJS — notify admin ──
+    sendEmail(leadData, CONFIG.adminEmail);
+
+    // ── 2. EmailJS — confirmation copy to user ──
+    if (leadData.email) {
+      sendEmail(leadData, leadData.email);
+    }
+
+    renderUserSelection('✅ Confirm Booking');
+    await showSuccessState(payload);
+  }
+
+  /* ─────────────────────────────────────────────
+     SUCCESS STATE
+  ───────────────────────────────────────────── */
+  async function showSuccessState(data) {
+    await renderBotMessage(`🎉 Your consultation has been booked!`, 600);
+
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'nn-success-block';
+        el.innerHTML = `
+          <div class="nn-success-card">
+            <div class="nn-success-icon">✅</div>
+            <div class="nn-success-title">Consultation Request Submitted!</div>
+            <div class="nn-success-sub">Our team will contact you shortly to confirm your appointment.</div>
+            <div class="nn-success-details">
+              <strong>📋 Booking Summary</strong><br>
+              👤 ${data.name} &nbsp;|&nbsp; 📧 ${data.email}<br>
+              📞 ${data.phone} &nbsp;|&nbsp; 🏢 ${data.company}<br>
+              📅 ${data.preferred_date} &nbsp;|&nbsp; 🕐 ${data.preferred_time}<br>
+              📝 ${data.requirement}
+            </div>
+          </div>`;
+        $body.insertBefore(el, $anchor);
+
+        // Post-success actions
+        setTimeout(async () => {
+          const actEl = document.createElement('div');
+          actEl.className = 'nn-action-block';
+          actEl.innerHTML = `
+            <div class="nn-action-row">
+              <button class="nn-action-btn whatsapp" onclick="NN.openWhatsApp()">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.116.553 4.103 1.522 5.834L.536 21.964a1 1 0 001.218 1.218l4.13-.986A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.907 0-3.703-.499-5.267-1.371l-.375-.214-3.886.927.928-3.887-.213-.374A9.96 9.96 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+                Chat on WhatsApp Now
+              </button>
+              <button class="nn-action-btn secondary" onclick="NN.restartChat()">⌂ Main Menu</button>
+            </div>`;
+          $body.insertBefore(actEl, $anchor);
+        }, 600);
+
+        resolve();
+      }, 400);
+    });
+  }
+
+  /* ─────────────────────────────────────────────
+     WHATSAPP LINK
+  ───────────────────────────────────────────── */
+  function openWhatsApp() {
+    const msg = encodeURIComponent(
+      `New Consultation Request:\nName: ${lead.name}\nEmail: ${lead.email}\nPhone: ${lead.phone}\nCompany: ${lead.company}\nRequirement: ${lead.requirement}\nPreferred Date: ${lead.preferred_date}\nPreferred Time: ${lead.preferred_time}`
+    );
+    window.open(`https://wa.me/${CONFIG.whatsappNumber}?text=${msg}`, '_blank');
+  }
+
+  /* ─────────────────────────────────────────────
+     TALK TO EXPERT — ENTRY POINT
+  ───────────────────────────────────────────── */
+  async function startExpertFlow(cardId) {
+    markCardSelected(cardId);
+    renderUserSelection('🤝 Talk to Expert');
+
+    // Reset lead state and sync global leadData
+    Object.assign(lead, { name:'', email:'', phone:'', company:'', requirement:'', preferred_date:'', preferred_time:'', step: 0 });
+    syncLeadData();
+
+    await renderBotMessage(
+      `I'd love to connect you with one of our experts! Let's collect a few details to set up your <strong>free consultation</strong>. 🚀<br>
+       <span style="font-size:.74rem;color:var(--nn-muted)">This takes less than 2 minutes.</span>`,
+      700
+    );
+
+    const first = LEAD_STEPS[0];
+    await renderBotMessage(`First, ${first.label}:`, 600);
+    await renderLeadInput(first, 1, LEAD_STEPS.length, 200);
+  }
+
+  /* ─────────────────────────────────────────────
+     AUTO CONSULTATION TRIGGER
+  ───────────────────────────────────────────── */
+  function checkConsultationTrigger() {
+    interactionCount++;
+    if (!consultationShown && interactionCount >= CONFIG.consultationTriggerAfter) {
+      consultationShown = true;
+      setTimeout(() => renderConsultationBanner(), 1200);
+    }
+  }
+
+  async function renderConsultationBanner() {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'nn-consult-banner';
+        el.innerHTML = `
+          <div class="nn-consult-banner-title">💡 Would you like a free expert consultation?</div>
+          <div class="nn-consult-banner-sub">Our AI & ServiceNow specialists can help you build the right strategy.</div>
+          <div class="nn-consult-banner-btns">
+            <button class="nn-action-btn primary" style="font-size:.75rem;padding:7px 12px;" onclick="NN.startExpertFlow('nn-consult-banner');this.closest('.nn-consult-banner').remove();">
+              📅 Yes, Schedule Now
+            </button>
+            <button class="nn-action-btn secondary" style="font-size:.75rem;padding:7px 12px;" onclick="this.closest('.nn-consult-banner').remove();">
+              Continue Browsing
+            </button>
+          </div>`;
+        $body.insertBefore(el, $anchor);
+        resolve();
+      }, 300);
+    });
+  }
+
+  /* ─────────────────────────────────────────────
+     AI-LIKE INTENT DETECTION (text input)
+  ───────────────────────────────────────────── */
+  const INTENT_MAP = [
+    { patterns: ['automation','automate','workflow','rpa'],        catIndex: 2, label: 'Solutions & Platform' },
+    { patterns: ['training','learn','course','bootcamp','upskill'],catIndex: 6, label: 'Learning & Training'  },
+    { patterns: ['job','career','hiring','vacancy','apply'],        catIndex: 7, label: 'Careers at NexusNow'  },
+    { patterns: ['price','pricing','cost','budget','quote'],        catIndex: 5, label: 'Engagement & Pricing' },
+    { patterns: ['contact','support','email','phone','reach'],      catIndex: 8, label: 'Contact & Support'    },
+    { patterns: ['service','what do you do','offer','solution'],   catIndex: 1, label: 'Our Services'         },
+    { patterns: ['ai','artificial intelligence','genai','llm'],     catIndex: 4, label: 'Technology & AI'      },
+    { patterns: ['industry','banking','insurance','telecom'],       catIndex: 3, label: 'Industries We Serve'  },
+    { patterns: ['about','who are you','nexusnow','company'],      catIndex: 0, label: 'About NexusNow.ai'    },
+  ];
+
+  async function handleTextInput() {
+    const input = document.getElementById('nn-text-input');
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+
+    renderUserSelection(text);
+    const lower = text.toLowerCase();
+
+    // Check expert / schedule intent
+    if (/expert|consult|talk|schedule|book|appointment|demo|meeting/.test(lower)) {
+      await startExpertFlow(null);
+      return;
+    }
+
+    // Intent matching
+    let matched = null;
+    for (const intent of INTENT_MAP) {
+      if (intent.patterns.some(p => lower.includes(p))) { matched = intent; break; }
+    }
+
+    if (matched) {
+      checkConsultationTrigger();
+      await renderBotMessage(`I found something relevant for you under <strong>${matched.label}</strong>!`, 700);
+      await selectCategory(matched.catIndex, null);
+      // Suggest expert after intent match
+      if (interactionCount >= 1) {
+        setTimeout(async () => {
+          await renderBotMessage(`💡 <strong>Tip:</strong> Want personalised advice? <button class="nn-chip" style="margin-left:6px;" onclick="NN.startExpertFlow(null)">Talk to an Expert</button>`, 800);
+        }, 2000);
+      }
+    } else {
+      checkConsultationTrigger();
+      await renderBotMessage(
+        `I'm not sure about that specific query, but I can help you with these topics:`, 700
+      );
+      await renderCardList('💡 Suggested', CATEGORIES.slice(0,4).map((cat, i) => ({
+        id: `intent-cat-${i}`,
+        icon: cat.icon,
+        title: cat.label,
+        sub: cat.sub,
+        badge: cat.badge,
+        badgeText: cat.badgeText,
+        onclick: `NN.selectCategory(${CATEGORIES.indexOf(cat)}, 'intent-cat-${i}')`
+      })), 300);
+      await renderViewAll('View all topics', 'NN.showAllCategories()', 100);
+    }
+  }
+
+  /* ─────────────────────────────────────────────
+     PATCH selectCategory / selectFAQ to track interactions
+  ───────────────────────────────────────────── */
+  const _origSelectCategory = selectCategory;
+  async function selectCategoryTracked(catIndex, cardId) {
+    checkConsultationTrigger();
+    return _origSelectCategory(catIndex, cardId);
+  }
+
+  const _origSelectFAQ = selectFAQ;
+  // selectFAQ tracking is now handled inline in window.NN.selectFAQ
+
+  /* ─────────────────────────────────────────────
+     PATCH renderHome to add "Talk to Expert" card
+  ───────────────────────────────────────────── */
+  const _origRenderHome = renderHome;
+  async function renderHomePatched(isRestart = false) {
+    if (isRestart) {
+      const children = Array.from($body.children);
+      children.forEach(c => { if (c.id !== 'nn-scroll-anchor') c.remove(); });
+      state.messages = [];
+      interactionCount = 0;
+      consultationShown = false;
+      $body.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    await renderBotMessage(
+      `👋 <strong>Hello! Welcome to Nexus Assistant.</strong><br>
+       I'm here to help you explore our AI &amp; ServiceNow solutions, or connect you with an expert.<br>
+       What would you like to do today?`,
+      500
+    );
+
+    // Featured cats + Talk to Expert
+    const featuredCats = CATEGORIES.slice(0, 3);
+    const homeCards = [
+      ...featuredCats.map((cat, i) => ({
+        id: `home-cat-${i}`,
+        icon: cat.icon,
+        title: cat.label,
+        sub: cat.sub,
+        badge: cat.badge,
+        badgeText: cat.badgeText,
+        onclick: `NN.selectCategory(${CATEGORIES.indexOf(cat)}, 'home-cat-${i}')`
+      })),
+      {
+        id: 'home-expert',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>`,
+        title: '🤝 Talk to Expert',
+        sub: 'Free consultation · Book now',
+        badge: 'active',
+        badgeText: 'Free',
+        onclick: `NN.startExpertFlow('home-expert')`
+      },
+      {
+        id: 'home-get-in-touch',
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`,
+        title: '📬 Get in Touch',
+        sub: "We'll contact you soon",
+        badge: 'new',
+        badgeText: 'New',
+        onclick: `NN.startGetInTouchFlow('home-get-in-touch')`
+      }
+    ];
+
+    await renderCardList('✨ Suggested Topics', homeCards, 200);
+    await renderViewAll('View all topics', 'NN.showAllCategories()', 100);
+  }
+
+  /* ─────────────────────────────────────────────
+     LEADERSHIP DATA — Source: nexusnow.ai/leaders
+     Board Members + Full Team (real photos & bios)
+  ───────────────────────────────────────────── */
+
+  /* Board Members */
+  const BOARD_MEMBERS = [
+    {
+      name: 'Sanjay Chakrabarty',
+      role: 'Chairman & Founder',
+      section: 'board',
+      image: 'https://static.wixstatic.com/media/e9252e_c6e803583b0146e18ab3f3c14bed4a34~mv2.jpg/v1/fill/w_425,h_361,al_c,lg_1,q_80,enc_avif,quality_auto/SanjayC_edited.jpg',
+      bioShort: 'Founder of Capital Square Partners (CSP), a PE fund with $3B+ in investments. Former CEO of MobiApps Holdings. Holds an MBA from Carnegie Mellon University. Avid sarod musician.',
+      bioFull: 'Sanjay is the Chairman & Founder of NexusNow.ai and Founder & Managing Partner of Capital Square Partners ("CSP"), a technology-focused private equity fund based in Singapore. CSP has deployed over $3 billion in investments, including the buyout of CSS Corp (rebranded Movate Inc.) and investments in Startek, Relevance Lab, and Bits in Glass. Earlier, Sanjay was President at Columbia Capital and founded MobiApps Holdings — a satellite communication tech company he grew from inception to a strategic exit. He began his career as a management consultant at Arthur D. Little in Washington DC and Singapore. He holds an MBA from Carnegie Mellon University and dual B.S. degrees in Computer Engineering & Mathematics from Penn State. He is also a classically trained sarod musician.',
+      bioPage: 'https://www.nexusnow.ai/leaders/sanjay-chakrabarty',
+      linkedin: 'https://www.linkedin.com/company/nexusnow-ai/',
+      tag: 'Chairman'
+    },
+    {
+      name: 'Jayanta Lahiri',
+      role: 'CEO & Co-Founder',
+      section: 'board',
+      image: 'https://static.wixstatic.com/media/64c811_7880c7b1e9f44ae9987e6e5739c37a26~mv2.jpg/v1/fill/w_287,h_323,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/Screenshot%202024-12-02%20at%204_edited_edited.jpg',
+      bioShort: '30+ years across Accenture, Wipro, Infosys, AXA Technologies & Startek. Expert in AI, multi-cloud, digital transformation, cybersecurity & analytics across BFSI, Telecom, Healthcare, and more.',
+      bioFull: 'Jayanta Lahiri brings over 30 years of global experience in technology, outsourcing, and consulting. He has held prominent leadership roles at Accenture, Wipro, Infosys, AXA Technologies, Firstsource, and Startek — driving digital transformation, multi-cloud infrastructure, AI, analytics, and cybersecurity at scale. His expertise spans Generative AI, advanced analytics, automation, and customer experience across Banking, Insurance, Manufacturing, Retail, Telecom, Healthcare, Oil & Gas, and E-commerce. Under his leadership, NexusNow.ai delivers industry-leading ServiceNow solutions, intelligent automation, and scalable AI-driven workflows globally.',
+      bioPage: 'https://www.nexusnow.ai/leaders/jayanta-lahiri',
+      linkedin: 'https://www.linkedin.com/company/nexusnow-ai/',
+      tag: 'CEO'
+    },
+    {
+      name: 'Jyotish Kumar Ghosh',
+      role: 'Chief Growth Officer & Co-Founder',
+      section: 'board',
+      image: 'https://static.wixstatic.com/media/ee67d4_426770e611134c55a4e180d61a912df2~mv2.jpg/v1/fill/w_287,h_323,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/Jyotish%20Ghosh_edited.jpg',
+      bioShort: '30+ years in IT & Telecom across Reliance, Tata Communications, IBM, Wipro & Times of India. Led $150M+ P&Ls. Avid marathon runner — 60+ half marathons and 7 full marathons.',
+      bioFull: 'As CGO and Co-Founder of NexusNow.ai, Jyotish leverages 30+ years in IT and Telecom across 3i Infotech, Reliance Communications (USD 150M P&L), Tata Communications (USD 100M business), IBM, Wipro, Sify Technologies, and Times Internet. His expertise spans IT Managed Services, SaaS, PaaS, IaaS, Cloud, and Telecom. He spearheads growth initiatives including ServiceNow integration and strategic partnerships. Outside work, he has completed 60+ half marathons and 7 full marathons — a testament to his perseverance and excellence.',
+      bioPage: 'https://www.nexusnow.ai/leaders/jyotish-kumar-ghosh',
+      linkedin: 'https://www.linkedin.com/company/nexusnow-ai/',
+      tag: 'CGO'
+    },
+    {
+      name: 'Bhaskar Ranjan Das',
+      role: 'Chief Operating Officer',
+      section: 'board',
+      image: 'https://static.wixstatic.com/media/64c811_0382ecd7b68a4805a0b06d1935a63517~mv2.jpg/v1/fill/w_287,h_323,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/brd%20%20profile%20%205_edited_edited_edited.jpg',
+      bioShort: '30+ years in IT, eLearning & consulting. Key roles at AICPA, Realization Technologies & Manipal Group. Drives NexusNow.ai\'s operational strategy and AI-powered transformation projects globally.',
+      bioFull: 'Bhaskar Ranjan Das is COO of NexusNow.ai with over three decades of experience in business operations, strategic growth, and relationship management across IT, eLearning, and consulting. He has held leadership roles at the Association of International Certified Professional Accountants, Realization Technologies, Manipal Universal Learning, and Universitas 21 Global. He oversees operational strategy, AI-powered transformation projects, strategic partnerships, and cross-functional team leadership — expanding NexusNow.ai\'s global reach across BFSI, telecom, and healthcare.',
+      bioPage: 'https://www.nexusnow.ai/leaders/bhaskar-das',
+      linkedin: 'https://www.linkedin.com/company/nexusnow-ai/',
+      tag: 'COO'
+    }
+  ];
+
+  /* Full Leadership Team */
+  const TEAM_MEMBERS = [
+    ...BOARD_MEMBERS,
+    {
+      name: 'Subramanya Chandrashekar',
+      role: 'Global CTO',
+      section: 'team',
+      image: 'https://static.wixstatic.com/media/ee67d4_d2db0947163a43b0a5342f1468b02cc1~mv2.png/v1/crop/x_0,y_23,w_300,h_255/fill/w_420,h_357,al_c,lg_1,q_85,enc_avif,quality_auto/Subramanya_edited_edited.png',
+      bioShort: 'Global CTO at NexusNow.ai. Deep expertise in enterprise technology architecture, digital platforms, and AI-driven innovation at global scale.',
+      bioFull: 'As Global CTO, Subramanya Chandrashekar leads NexusNow.ai\'s technology vision and architecture. He brings deep expertise in enterprise technology strategy, digital platforms, AI-driven innovation, and scalable cloud infrastructure. His leadership ensures that NexusNow.ai\'s solutions remain at the cutting edge of ServiceNow and Generative AI capabilities.',
+      bioPage: 'https://www.nexusnow.ai/leaders/subramanya-chandrashekar',
+      linkedin: 'https://www.linkedin.com/in/subramanya-c-b124503a',
+      tag: 'CTO'
+    },
+    {
+      name: 'Tripureswar Chattopadhaya',
+      role: 'Business Head – ServiceNow',
+      section: 'team',
+      image: 'https://static.wixstatic.com/media/ee67d4_7b67091531ce4a5b9666c8f4fe1da96a~mv2.png/v1/crop/x_0,y_19,w_413,h_351/fill/w_425,h_361,al_c,lg_1,q_85,enc_avif,quality_auto/Tripureswar_edited.png',
+      bioShort: 'Leads ServiceNow business unit at NexusNow.ai. Enterprise technology specialist with deep expertise in ServiceNow platform strategy, advisory, and large-scale implementations.',
+      bioFull: 'Tripureswar Chattopadhaya heads NexusNow.ai\'s ServiceNow business unit, bringing deep expertise in enterprise ServiceNow advisory, platform strategy, and large-scale implementations. He drives the delivery of cutting-edge ServiceNow solutions across BFSI, Telecom, Healthcare, and Manufacturing — enabling clients to achieve operational excellence and measurable digital transformation outcomes.',
+      bioPage: 'https://www.nexusnow.ai/leaders/tripureswar-chattopadhaya',
+      linkedin: 'http://linkedin.com/in/tripchat',
+      tag: 'ServiceNow'
+    },
+    {
+      name: 'Jyotin Gambhir',
+      role: 'US GEO Head',
+      section: 'team',
+      image: 'https://static.wixstatic.com/media/ee67d4_a21431fc1f1f409490ba47de74677e2a~mv2.png/v1/crop/x_0,y_30,w_400,h_340/fill/w_425,h_361,al_c,lg_1,q_85,enc_avif,quality_auto/Picture5_edited.png',
+      bioShort: 'Heads NexusNow.ai\'s US geography. Seasoned enterprise technology leader with extensive experience growing and managing client relationships across North America.',
+      bioFull: 'As US GEO Head, Jyotin Gambhir drives NexusNow.ai\'s growth and client relationships across North America. He brings extensive experience in enterprise technology sales, strategic account management, and building high-performing regional teams. His focus is on expanding NexusNow.ai\'s footprint in the US market through ServiceNow and AI-driven solutions.',
+      bioPage: 'https://www.nexusnow.ai/leaders/jyotin-gambhir',
+      linkedin: 'https://www.linkedin.com/in/jyotin-gambhir',
+      tag: 'US'
+    },
+    {
+      name: 'Aanchal Mishra',
+      role: 'Global Client Partner – Strategic Accounts',
+      section: 'team',
+      image: 'https://static.wixstatic.com/media/ee67d4_bff1b89d2aa14068bcc2eceaf67ade77~mv2.png/v1/crop/x_0,y_200,w_1918,h_1629/fill/w_425,h_361,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Aanchal%20Mishra_edited.png',
+      bioShort: 'Manages and grows NexusNow.ai\'s strategic global accounts. Expert in enterprise client partnerships, digital transformation advisory, and long-term account strategy.',
+      bioFull: 'Aanchal Mishra serves as Global Client Partner for Strategic Accounts at NexusNow.ai, responsible for managing and growing the company\'s most critical enterprise client relationships globally. She brings deep expertise in digital transformation advisory, strategic partnership development, and account expansion — ensuring clients achieve maximum value from NexusNow.ai\'s ServiceNow and AI-powered solutions.',
+      bioPage: 'https://www.nexusnow.ai/leaders/aanchal-mishra',
+      linkedin: 'https://www.linkedin.com/in/aanchal-mishra/',
+      tag: 'Client'
+    },
+    {
+      name: 'Manish Raisinghani',
+      role: 'ServiceNow Architect',
+      section: 'team',
+      image: 'https://static.wixstatic.com/media/ee67d4_3c982ce86bd34364a86392f312c43c3c~mv2.png/v1/crop/x_0,y_693,w_2250,h_1899/fill/w_425,h_361,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/IMG_1168-1_edited.png',
+      bioShort: '20+ years leading ServiceNow implementations, enterprise solution architecture, automation, and IT carve-outs across diverse industry verticals.',
+      bioFull: 'Manish Raisinghani is a technology solutions expert with 20+ years of experience leading ServiceNow implementations, digital transformation, and IT carve-outs. He excels in enterprise solution architecture, complex automation design, and driving business outcomes across Banking, Insurance, Telecom, Manufacturing, and Retail. His deep ServiceNow platform expertise spans ITSM, ITOM, HRSD, CSM, and GRC modules.',
+      bioPage: 'https://www.nexusnow.ai/leaders/manish-raisinghani',
+      linkedin: 'https://www.linkedin.com/company/nexusnow-ai/',
+      tag: 'Architect'
+    },
+    {
+      name: 'Saikat Ghosh',
+      role: 'Global Practice Head – Hi-Tech & IIoT',
+      section: 'team',
+      image: 'https://static.wixstatic.com/media/ee67d4_0a349c542e0a4a219c80a604e83d581a~mv2.png/v1/crop/x_0,y_210,w_787,h_668/fill/w_425,h_361,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/WhatsApp%20Image%202026-02-03%20at%2012_08_edited.png',
+      bioShort: 'Global Practice Head for Hi-Tech Solutions and IIoT at NexusNow.ai. Visionary leader in industrial IoT, smart manufacturing, and connected enterprise transformation.',
+      bioFull: 'Saikat Ghosh leads the Global Hi-Tech Solutions and IIoT practice at NexusNow.ai. He is a visionary leader in industrial IoT, smart manufacturing, and connected enterprise transformation — helping clients across technology and manufacturing sectors harness IIoT platforms and AI to drive operational efficiency, predictive maintenance, and digital factory outcomes.',
+      bioPage: 'https://www.nexusnow.ai/leaders/saikatghosh',
+      linkedin: 'https://www.linkedin.com/in/ghoshlinks/',
+      tag: 'IIoT'
+    },
+    {
+      name: 'Amitava Datta',
+      role: 'Geo Head – Europe & UK',
+      section: 'team',
+      image: 'https://static.wixstatic.com/media/ee67d4_588ed67e2eca4103af8d7507a1cf4c2d~mv2.png/v1/crop/x_0,y_14,w_187,h_159/fill/w_262,h_222,al_c,lg_1,q_85,enc_avif,quality_auto/Picture1_edited.png',
+      bioShort: 'Leads NexusNow.ai\'s European and UK geography. Experienced enterprise technology leader driving growth and strategic partnerships across EMEA markets.',
+      bioFull: 'Amitava Datta heads NexusNow.ai\'s Europe & UK geography, responsible for driving regional growth, client acquisition, and strategic partnerships across EMEA. He brings extensive enterprise technology leadership experience in building regional teams and delivering ServiceNow and AI-driven transformation outcomes for European enterprises.',
+      bioPage: 'https://www.nexusnow.ai/leaders/amitava-datta',
+      linkedin: 'http://linkedin.com/in/amitavadatta-lisbon',
+      tag: 'Europe'
+    },
+    {
+      name: 'Ashwani Tikoo',
+      role: 'Director – Strategic Accounts',
+      section: 'team',
+      image: 'https://static.wixstatic.com/media/ee67d4_c7917c6ddb594b4aa64caa4bafee3820~mv2.png/v1/crop/x_0,y_31,w_1639,h_1392/fill/w_425,h_361,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Ashwani%20Tikoo_edited.png',
+      bioShort: 'Director of Strategic Accounts at NexusNow.ai. Drives enterprise account growth and deepens client relationships across key markets globally.',
+      bioFull: 'Ashwani Tikoo serves as Director – Strategic Accounts at NexusNow.ai, responsible for growing and managing high-value enterprise client relationships globally. He brings deep expertise in account strategy, client advisory, and enterprise technology sales — ensuring strategic clients receive maximum value from NexusNow.ai\'s AI and ServiceNow transformation capabilities.',
+      bioPage: 'https://www.nexusnow.ai/leaders/ashwani-tikoo',
+      linkedin: 'http://linkedin.com/in/ashwani-tikoo-1467836',
+      tag: 'Accounts'
+    },
+    {
+      name: 'Publius Paul',
+      role: 'Delivery Lead',
+      section: 'team',
+      image: 'https://static.wixstatic.com/media/ee67d4_9b5dd5bb42064dc1ac8be9b27bb06101~mv2.png/v1/crop/x_0,y_21,w_3000,h_2535/fill/w_425,h_361,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/ANGE10502%20Png_edited.png',
+      bioShort: '20+ years in IT service delivery, infrastructure management & project leadership at Accenture, AXA Tech, and IBM. Ensures seamless delivery and operational excellence globally.',
+      bioFull: 'Publius Paul brings 20+ years of expertise in IT service delivery, infrastructure management, and project leadership. With roles at Accenture, AXA Tech, and IBM, he specialises in end-to-end IT transformations — ensuring seamless delivery, operational excellence, and innovative solutions for global enterprise clients across Banking, Insurance, and Telecom sectors.',
+      bioPage: 'https://www.nexusnow.ai/leaders/publius-paul',
+      linkedin: 'https://www.linkedin.com/company/nexusnow-ai/',
+      tag: 'Delivery'
+    },
+    {
+      name: 'Jitendra Jaiswal',
+      role: 'Geo Head – Finland & Nordics',
+      section: 'team',
+      image: 'https://static.wixstatic.com/media/ee67d4_d7f14fef59014013b8ee7f316cc6432f~mv2.png/v1/crop/x_0,y_7,w_750,h_638/fill/w_425,h_361,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Image_edited.png',
+      bioShort: 'Leads NexusNow.ai\'s Finland & Nordics geography. Drives strategic growth, client relationships, and technology partnerships across the Nordic enterprise market.',
+      bioFull: 'Jitendra Jaiswal leads NexusNow.ai\'s Finland & Nordics geography, responsible for regional growth, business development, and client success across the Nordic enterprise market. He brings deep expertise in enterprise technology strategy and building high-performance regional teams to deliver ServiceNow and AI-powered transformation.',
+      bioPage: 'https://www.nexusnow.ai/leaders/jitendra-jaiswal',
+      linkedin: 'https://www.linkedin.com/in/jkjaiswal27/',
+      tag: 'Nordics'
+    },
+    {
+      name: 'Anil Vanjare',
+      role: 'Global IT & Digital Transformation Leader',
+      section: 'team',
+      image: 'https://static.wixstatic.com/media/ee67d4_05121cc6bf034904a5d849ceff6f7ace~mv2.png/v1/crop/x_0,y_261,w_576,h_489/fill/w_425,h_361,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/WhatsApp%20Image%202026-02-03%20at%2012_51_edited.png',
+      bioShort: 'SAP & ERP Modernization Expert. Drives global IT strategy and large-scale digital transformation programmes across enterprise clients.',
+      bioFull: 'Anil Vanjare is a Global IT & Digital Transformation Leader and SAP & ERP Modernization Expert at NexusNow.ai. He drives large-scale IT strategy and transformation programmes, with deep expertise in SAP, ERP modernization, and enterprise digital transformation across global markets — helping organisations streamline operations and accelerate business outcomes.',
+      bioPage: 'https://www.nexusnow.ai/leaders/anilvanjare',
+      linkedin: 'https://www.linkedin.com/in/anil-vanjare-03aa9210/details/experience/',
+      tag: 'SAP'
+    }
+  ];
+
+  /* ─────────────────────────────────────────────
+     RENDER: TEAM CARDS — Two-section layout
+     Board Members → full Leadership Team
+     Each card: circular photo · name · role · tag
+     · collapsible bio · LinkedIn · Read Bio link
+     ❌ No scroll — preserves existing behaviour
+  ───────────────────────────────────────────── */
+  function renderTeamCards(delay = 0) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const wrap = document.createElement('div');
+        wrap.className = 'nn-team-block';
+
+        /* Helper: build one card HTML */
+        function buildCard(member, idx) {
+          const initials = member.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+          const uid      = `nn-tm-${idx}`;
+          const liIcon   = `<svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>`;
+
+          return `
+            <div class="nn-team-card" id="${uid}-card">
+              <div class="nn-team-avatar">
+                <img src="${member.image}" alt="${member.name}"
+                     loading="lazy"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                <span class="nn-team-avatar-fallback" style="display:none;">${initials}</span>
+              </div>
+              <div class="nn-team-body">
+                <div class="nn-team-toprow">
+                  <div>
+                    <div class="nn-team-name">${member.name}</div>
+                    <div class="nn-team-role">${member.role}</div>
+                  </div>
+                  <span class="nn-team-tag">${member.tag}</span>
+                </div>
+                <div class="nn-team-bio" id="${uid}-bio">${member.bioShort}</div>
+                <div class="nn-team-actions">
+                  <button class="nn-team-expand" id="${uid}-btn"
+                          onclick="event.stopPropagation();NN.toggleTeamBio(${idx})">
+                    <span id="${uid}-btntxt">Read more</span>
+                    <i class="nn-team-expand-arrow" id="${uid}-arr">▾</i>
+                  </button>
+                  <div class="nn-team-links">
+                    <a class="nn-team-link-btn" href="${member.bioPage}" target="_blank"
+                       onclick="event.stopPropagation()">
+                      Full bio →
+                    </a>
+                    <a class="nn-team-link-btn nn-team-link-li" href="${member.linkedin}" target="_blank"
+                       onclick="event.stopPropagation()" title="LinkedIn">
+                      ${liIcon} LinkedIn
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>`;
+        }
+
+        /* Board section */
+        const boardHTML = BOARD_MEMBERS.map((m, i) => buildCard(m, i)).join('');
+
+        /* Team section (skip board duplicates — slice from index 4) */
+        const teamOnly  = TEAM_MEMBERS.slice(BOARD_MEMBERS.length);
+        const teamHTML  = teamOnly.map((m, i) => buildCard(m, BOARD_MEMBERS.length + i)).join('');
+
+        wrap.innerHTML = `
+          <div class="nn-team-section-label">
+            <span class="nn-team-section-icon">👑</span> Board Members
+          </div>
+          <div class="nn-team-cards">${boardHTML}</div>
+
+          <div class="nn-team-section-label" style="margin-top:14px;">
+            <span class="nn-team-section-icon">🚀</span> Leadership Team
+          </div>
+          <div class="nn-team-cards">${teamHTML}</div>`;
+
+        $body.insertBefore(wrap, $anchor);
+        resolve(wrap);
+      }, delay);
+    });
+  }
+
+  /* ─────────────────────────────────────────────
+     TOGGLE TEAM BIO (expand / collapse)
+     Swaps between bioShort and bioFull
+  ───────────────────────────────────────────── */
+  function toggleTeamBio(idx) {
+    const uid     = `nn-tm-${idx}`;
+    const bioEl   = document.getElementById(`${uid}-bio`);
+    const arrEl   = document.getElementById(`${uid}-arr`);
+    const btnTxt  = document.getElementById(`${uid}-btntxt`);
+
+    if (!bioEl) return;
+
+    const isExpanded = bioEl.classList.toggle('expanded');
+    if (arrEl)  arrEl.classList.toggle('open', isExpanded);
+    if (btnTxt) btnTxt.textContent = isExpanded ? 'Read less' : 'Read more';
+
+    /* Swap short ↔ full bio text */
+    const member = TEAM_MEMBERS[idx];
+    if (member) {
+      bioEl.textContent = isExpanded ? member.bioFull : member.bioShort;
+    }
+  }
+
+
+  /* ─────────────────────────────────────────────
+     OVERRIDE: selectFAQ for "Who leads NexusNow.ai?"
+     All other FAQs behave exactly as before.
+     Only the "Who leads" FAQ in the About category
+     triggers the visual team card experience.
+  ───────────────────────────────────────────── */
+  const _origSelectFAQBeforeTeam = selectFAQ;
+  async function selectFAQWithTeam(catIndex, faqIndex, cardId) {
+    const cat = CATEGORIES[catIndex];
+    const faq = cat.faqs[faqIndex];
+
+    // ── Special handling: "Who leads NexusNow.ai?" ──
+    if (cat.id === 'about' && faq.q === 'Who leads NexusNow.ai?') {
+      markCardSelected(cardId);
+      renderUserSelection(faq.q);
+
+      await renderBotMessage(
+        `Meet the visionary leaders behind <strong>NexusNow.ai</strong> — a team with over <strong>200 years of collective expertise</strong> in AI, ServiceNow, and enterprise transformation. 🚀`,
+        750
+      );
+
+      // Render the visual team cards
+      await renderTeamCards(300);
+
+      // Post-team actions
+      await renderBotMessage(
+        `Click any leader to expand their full bio. Want to connect or learn more?`,
+        500
+      );
+
+      await renderChips('Quick Actions', [
+        { label: '🤝 Talk to Our Team',  onclick: `NN.startExpertFlow(null)` },
+        { label: '🌐 Visit Leaders Page', onclick: `window.open('https://www.nexusnow.ai/leaders','_blank')` },
+        { label: '⌂ Main Menu', cls: 'home-chip', onclick: 'NN.restartChat()' }
+      ], 300);
+
+      // Related About FAQs (excluding the current one)
+      const moreFaqs = cat.faqs.filter((_, i) => i !== faqIndex).slice(0, 2);
+      if (moreFaqs.length) {
+        await renderCardList(`More about ${cat.label}`, moreFaqs.map((f, i) => {
+          const realIdx = cat.faqs.indexOf(f);
+          return {
+            id: `more-faq-${catIndex}-${realIdx}`,
+            icon: `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/>
+            </svg>`,
+            title: f.q,
+            sub: cat.label,
+            badge: null,
+            onclick: `NN.selectFAQ(${catIndex}, ${realIdx}, 'more-faq-${catIndex}-${realIdx}')`
+          };
+        }), 200);
+      }
+
+      await renderViewAll('See all topics', 'NN.showAllCategories()', 100);
+      return;
+    }
+
+    // ── All other FAQs → standard behaviour ──
+    return _origSelectFAQBeforeTeam(catIndex, faqIndex, cardId);
+  }
+
+  /* ─────────────────────────────────────────────
+     GET IN TOUCH — FLOW
+     Renders a compact contact form inside the chat.
+     Does NOT modify any existing chatbot flow.
+  ───────────────────────────────────────────── */
+  const GIT_GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-Kc6KLTpL7zIACErjThNxs2BGrajmOpDVCDnLFjPlZBbKdi_HYBXgEPxPDsYqqgku/exec';
+
+  async function startGetInTouchFlow(cardId) {
+    markCardSelected(cardId);
+    renderUserSelection('📬 Get in Touch');
+
+    await renderBotMessage(
+      `Great! Please fill in your details below and our team will <strong>contact you shortly</strong>. 📩<br>
+       <span style="font-size:.74rem;color:var(--nn-muted)">All fields are required.</span>`,
+      700
+    );
+
+    await renderGetInTouchForm(200);
+  }
+
+  function renderGetInTouchForm(delay = 0) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const formId = `nn-git-form-${Date.now()}`;
+        const el = document.createElement('div');
+        el.className = 'nn-git-form-block';
+        el.id = formId;
+        el.innerHTML = `
+          <div class="nn-git-form-card">
+            <div class="nn-git-form-title">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--nn-blue)" stroke-width="2" stroke-linecap="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              Contact Details
+            </div>
+
+            <div class="nn-git-field-group">
+              <!-- Name -->
+              <div class="nn-git-field">
+                <label class="nn-git-label" for="${formId}-name">Full Name *</label>
+                <input id="${formId}-name" class="nn-git-input" type="text" placeholder="e.g. Rahul Sharma" autocomplete="name" />
+                <span class="nn-git-error-msg" id="${formId}-name-err"></span>
+              </div>
+
+              <!-- Phone -->
+              <div class="nn-git-field">
+                <label class="nn-git-label" for="${formId}-phone">Phone Number *</label>
+                <input id="${formId}-phone" type="tel" class="nn-git-input" placeholder="e.g. 9876543210" />
+                <span class="nn-git-error-msg" id="${formId}-phone-err"></span>
+              </div>
+
+              <!-- Email -->
+              <div class="nn-git-field">
+                <label class="nn-git-label" for="${formId}-email">Email Address *</label>
+                <input id="${formId}-email" class="nn-git-input" type="email" placeholder="e.g. rahul@company.com" autocomplete="email" />
+                <span class="nn-git-error-msg" id="${formId}-email-err"></span>
+              </div>
+            </div>
+
+            <!-- Consent -->
+            <div class="nn-git-consent-row" id="${formId}-consent-row">
+              <input class="nn-git-checkbox" type="checkbox" id="${formId}-consent" />
+              <label class="nn-git-consent-label" for="${formId}-consent">
+                I agree to be contacted by the team
+              </label>
+            </div>
+            <span class="nn-git-error-msg" id="${formId}-consent-err" style="margin-bottom:10px;display:block;"></span>
+
+            <!-- Submit -->
+            <button class="nn-git-submit-btn" id="${formId}-submit" onclick="NN.submitGetInTouch('${formId}')">
+              <span class="nn-git-submit-spinner"></span>
+              <span class="nn-git-submit-text">Send Message →</span>
+            </button>
+          </div>`;
+
+        $body.insertBefore(el, $anchor);
+
+        // ── intl-tel-input: Git Form phone ──
+        const gitPhoneEl = document.getElementById(`${formId}-phone`);
+        const gitIti = window.intlTelInput(gitPhoneEl, {
+          initialCountry: "in",
+          separateDialCode: true,
+          preferredCountries: ["in", "us", "gb"],
+          utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/js/utils.js"
+        });
+        // Store iti instance on element for retrieval in submit
+        gitPhoneEl._iti = gitIti;
+
+        // Focus first field
+        setTimeout(() => {
+          const nameInput = document.getElementById(`${formId}-name`);
+          if (nameInput) nameInput.focus();
+
+          // Enter key navigation between fields
+          [`${formId}-name`, `${formId}-phone`, `${formId}-email`].forEach((id, idx, arr) => {
+            const inp = document.getElementById(id);
+            if (!inp) return;
+            inp.addEventListener('keydown', e => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                if (idx < arr.length - 1) {
+                  document.getElementById(arr[idx + 1])?.focus();
+                } else {
+                  NN.submitGetInTouch(`${formId}`);
+                }
+              }
+            });
+          });
+        }, 80);
+
+        resolve(el);
+      }, delay);
+    });
+  }
+
+  async function submitGetInTouch(formId) {
+    const nameEl    = document.getElementById(`${formId}-name`);
+    const phoneEl   = document.getElementById(`${formId}-phone`);
+    const emailEl   = document.getElementById(`${formId}-email`);
+    const consentEl = document.getElementById(`${formId}-consent`);
+    const submitBtn = document.getElementById(`${formId}-submit`);
+
+    // — Validate —
+    let hasError = false;
+
+    function setError(inputEl, errId, msg) {
+      const errEl = document.getElementById(errId);
+      if (msg) {
+        inputEl.classList.add('nn-git-error');
+        if (errEl) errEl.textContent = msg;
+        hasError = true;
+      } else {
+        inputEl.classList.remove('nn-git-error');
+        if (errEl) errEl.textContent = '';
+      }
+    }
+
+    const nameVal  = nameEl?.value.trim() || '';
+    // ── intl-tel-input: retrieve full number from iti instance ──
+    const gitItiInst = phoneEl?._iti;
+    const phoneVal = gitItiInst ? gitItiInst.getNumber() : (phoneEl?.value.trim() || '');
+    const emailVal = emailEl?.value.trim() || '';
+
+    setError(nameEl, `${formId}-name-err`,
+      !nameVal ? 'Full name is required.' : null);
+
+    // ── intl-tel-input: validate using iti.isValidNumber() ──
+    const phoneEmpty = !phoneEl?.value.trim();
+    const phoneInvalid = gitItiInst ? !gitItiInst.isValidNumber() : !/^\d{7,15}$/.test(phoneVal.replace(/\D/g,''));
+    setError(phoneEl, `${formId}-phone-err`,
+      phoneEmpty ? 'Phone number is required.' :
+      phoneInvalid ? 'Enter a valid phone number with country code.' : null);
+
+    setError(emailEl, `${formId}-email-err`,
+      !emailVal ? 'Email address is required.' :
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal) ? 'Enter a valid email address.' : null);
+
+    // Consent
+    const consentRow = document.getElementById(`${formId}-consent-row`);
+    const consentErrEl = document.getElementById(`${formId}-consent-err`);
+    if (!consentEl?.checked) {
+      consentRow?.classList.add('nn-git-error');
+      if (consentErrEl) consentErrEl.textContent = 'You must agree to be contacted.';
+      hasError = true;
+    } else {
+      consentRow?.classList.remove('nn-git-error');
+      if (consentErrEl) consentErrEl.textContent = '';
+    }
+
+    if (hasError) return;
+
+    // — Loading state —
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.classList.add('loading');
+    }
+
+    // — Build payload —
+    const payload = {
+      name:      nameVal,
+      phone:     phoneVal,
+      email:     emailVal,
+      consent:   true,
+      timestamp: new Date().toISOString()
+    };
+
+    // — POST to Google Script —
+    try {
+      await fetch(GIT_GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch (e) {
+      // Network errors are silently swallowed — success UI still shown
+      console.warn('NexusNow Get in Touch: fetch error', e);
+    }
+
+    // — Disable the entire form —
+    [nameEl, phoneEl, emailEl, consentEl].forEach(el => { if (el) el.disabled = true; });
+    // Disable iti flag button as well
+    if (gitItiInst) { try { gitItiInst.setDisabled(true); } catch(e) { /* no-op */ } }
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.classList.remove('loading'); }
+
+    // — Render user bubble summary —
+    renderUserSelection(`📬 ${nameVal} · ${emailVal}`);
+
+    // — Success message —
+    await renderGetInTouchSuccess(600);
+  }
+
+  function renderGetInTouchSuccess(delay = 0) {
+    return new Promise(resolve => {
+      setTimeout(async () => {
+        // Success card
+        const el = document.createElement('div');
+        el.className = 'nn-success-block';
+        el.innerHTML = `
+          <div class="nn-success-card">
+            <div class="nn-success-icon">✅</div>
+            <div class="nn-success-title">Thank you! We will contact you shortly.</div>
+            <div class="nn-success-sub">Our team has received your details and will reach out to you soon.</div>
+          </div>`;
+        $body.insertBefore(el, $anchor);
+
+        // Post-success actions
+        await renderChips('What would you like to do next?', [
+          { label: '🤝 Book a Consultation', onclick: `NN.startExpertFlow(null)` },
+          { label: '⌂ Main Menu', cls: 'home-chip', onclick: 'NN.restartChat()' }
+        ], 500);
+
+        resolve();
+      }, delay);
+    });
+  }
+
+  /* ─────────────────────────────────────────────
+     PUBLIC API
+  ───────────────────────────────────────────── */
+  window.NN = {
+    toggle,
+    restartChat: () => renderHomePatched(true),
+    showAllCategories,
+    selectCategory: selectCategoryTracked,
+    selectFAQ: (catIndex, faqIndex, cardId) => {
+      checkConsultationTrigger();
+      return selectFAQWithTeam(catIndex, faqIndex, cardId);
+    },
+    renderHome: renderHomePatched,
+    startExpertFlow,
+    submitLeadStep,
+    leadBack,
+    selectDate,
+    selectTime,
+    confirmBooking,
+    openWhatsApp,
+    handleTextInput,
+    toggleTeamBio,
+    startGetInTouchFlow,
+    submitGetInTouch
+  };
+
+  // Override the initialized renderHome call inside toggle()
+  const _origToggle = toggle;
+  function togglePatched() {
+    state.open = !state.open;
+    $box.classList.toggle('open', state.open);
+    $fab.classList.toggle('open', state.open);
+    if (state.open) {
+      $badge.classList.add('hidden');
+      if (!state.initialized) {
+        state.initialized = true;
+        renderHomePatched(false);
+      }
+    }
+  }
+  document.getElementById('nn-fab').onclick = togglePatched;
+
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/js/intlTelInput.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/js/utils.js"></script>
+<div id="ai-chat-popup">
+
+  <iframe
+      src="http://localhost:3000"
+      id="ai-chat-frame">
+  </iframe>
+
+</div>
+
+</script>
+<div class="chat-popup" id="chatPopup">
+
+    <iframe
+        src="http://localhost:3000"
+        id="chatFrame">
+    </iframe>
+
+</div>
+<script>
+
+const aiBtn = document.getElementById("open-ai-chat");
+const chatPopup = document.getElementById("chatPopup");
+const oldChatbox = document.getElementById("nn-chatbox");
+
+/* OPEN AI CHAT */
+aiBtn.addEventListener("click", () => {
+
+    chatPopup.classList.add("open");
+    oldChatbox.classList.add("hide-chatbox");
+
+});
+
+/* CLOSE AI CHAT */
+function closeAIChat(){
+
+    chatPopup.classList.remove("open");
+    oldChatbox.classList.remove("hide-chatbox");
+
+}
+
+</script>
+<div class="chat-popup" id="chatPopup">
+   <iframe src="index.html" id="chatFrame"></iframe>
+</div>
+<script>
+
+window.addEventListener('message', (event) => {
+
+    if(event.data === 'closeAIChat'){
+
+        document
+          .getElementById('chatPopup')
+          .classList.remove('open');
+
+        document
+          .getElementById('nn-chatbox')
+          .classList.remove('hide-chatbox');
+
+    }
+
+});
+
+</script>
+</body>
+</html>

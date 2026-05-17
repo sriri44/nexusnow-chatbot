@@ -1,0 +1,27 @@
+{
+  "name": "nexusnow-rag-chatbot",
+  "version": "2.0.0",
+  "description": "NexusNow.ai Enterprise RAG AI Chatbot",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "crawl": "node crawler.js",
+    "embed": "node embedder.js",
+    "setup": "node crawler.js && node embedder.js",
+    "reset": "rm -f data/crawledData.json data/chunks.json data/vectors.json && node crawler.js && node embedder.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "nodemailer": "^6.9.7",
+    "openai": "^4.28.0",
+    "puppeteer": "^25.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
