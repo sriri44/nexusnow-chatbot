@@ -432,7 +432,10 @@
     .country-code-btn .cc-code  { font-weight: 600; font-size: 0.8rem; color: var(--brand-primary); }
     .country-code-btn .cc-arrow { font-size: 10px; color: var(--text-muted); margin-left: 1px; }
 
-    .phone-number-input { flex: 1; }
+    .phone-number-input{
+  width:100%;
+  min-width:0;
+}
 
     .country-dropdown-panel {
       position: absolute;
@@ -483,6 +486,81 @@
     .country-option .opt-name { flex: 1; color: var(--text-primary); font-weight: 500; }
     .country-option .opt-code { color: var(--brand-primary); font-weight: 600; font-family: var(--font-mono); font-size: 0.78rem; }
 
+    /* ── Masked Input ───────────────────────── */
+
+.masked-input-wrapper{
+  position:relative;
+  width:100%;
+  display:flex;
+  align-items:center;
+}
+.phone-mask-wrapper{
+  position:relative;
+  flex:1;
+  display:flex;
+  align-items:center;
+}
+
+.phone-mask-wrapper input{
+  width:100% !important;
+  min-width:0 !important;
+
+  padding:9px 38px 9px 12px !important;
+
+  border:1.5px solid var(--border-light) !important;
+  border-radius:var(--radius-input) !important;
+
+  background:var(--surface-soft) !important;
+
+  font-size:0.85rem !important;
+  font-family:var(--font-body) !important;
+
+  outline:none;
+
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.phone-mask-wrapper input:focus{
+  border-color:var(--brand-primary) !important;
+  background:white !important;
+  box-shadow:0 0 0 3px rgba(107,49,255,0.08) !important;
+}
+ 
+.masked-input-wrapper input{
+  width:100%;
+  padding-right:42px !important;
+}
+
+.mask-toggle-btn{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  font-size:16px;
+  color:#6B31FF;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:24px;
+  height:24px;
+  z-index:5;
+  pointer-events:auto;
+}
+
+.mask-toggle-btn:hover{
+  opacity:0.8;
+}
+.masked{
+  -webkit-text-security: disc !important;
+  font-family: var(--font-body) !important;
+  letter-spacing: normal !important;
+}
     /* Timezone dropdown */
     .timezone-wrapper { position: relative; }
 
@@ -1234,52 +1312,220 @@ if (data.type === 'leadership_cards') {
     }
 
     /* ── Text field builder ──────────────────────────────────────────────────── */
-    function buildTextField({ formId, fieldId, label, placeholder, type, min, max, isEmail, counter }) {
-      const group     = document.createElement('div');
-      group.className = 'form-field-group';
-      group.appendChild(makeLabel(label, true));
+    function buildTextField({
+  formId,
+  fieldId,
+  label,
+  placeholder,
+  type,
+  min,
+  max,
+  isEmail,
+  counter
+}) {
 
-      const input       = document.createElement('input');
-      input.type        = type;
-      input.id          = `${formId}-${fieldId}`;
-      input.placeholder = placeholder;
-      input.maxLength   = max;
-      if (type !== 'email') input.setAttribute('data-min', min);
-      input.setAttribute('data-max', max);
-      if (isEmail) input.setAttribute('data-email', 'true');
-      input.setAttribute('aria-label', label);
+  const group = document.createElement('div');
 
-      const errMsg     = document.createElement('div');
-      errMsg.className = 'field-error-msg';
-      errMsg.id        = `${formId}-${fieldId}-err`;
-      errMsg.setAttribute('role', 'alert');
-      errMsg.setAttribute('aria-live', 'polite');
+  group.className = 'form-field-group';
 
-      if (counter || min >= 10) {
-        const charDiv     = document.createElement('div');
-        charDiv.className = 'char-counter';
-        charDiv.id        = `${formId}-${fieldId}-counter`;
-        charDiv.textContent = `${max} characters remaining`;
+  group.appendChild(
+    makeLabel(label, true)
+  );
 
-        input.addEventListener('input', () => {
-          updateCharCounter(charDiv, max - input.value.length, max);
-          validateField(input, errMsg, { min, max, isEmail });
-        });
-        input.addEventListener('blur', () => validateField(input, errMsg, { min, max, isEmail }));
+  const input = document.createElement('input');
 
-        group.appendChild(input);
-        group.appendChild(errMsg);
-        group.appendChild(charDiv);
-      } else {
-        input.addEventListener('input', () => validateField(input, errMsg, { min, max, isEmail }));
-        input.addEventListener('blur',  () => validateField(input, errMsg, { min, max, isEmail }));
-        group.appendChild(input);
-        group.appendChild(errMsg);
-      }
+  input.type = type;
 
-      return group;
+  input.id = `${formId}-${fieldId}`;
+
+  input.placeholder = placeholder;
+
+  input.maxLength = max;
+
+  if (type !== 'email') {
+    input.setAttribute('data-min', min);
+  }
+
+  input.setAttribute('data-max', max);
+
+  if (isEmail) {
+    input.setAttribute('data-email', 'true');
+  }
+
+  input.setAttribute(
+    'aria-label',
+    label
+  );
+
+  const errMsg = document.createElement('div');
+
+  errMsg.className = 'field-error-msg';
+
+  errMsg.id =
+    `${formId}-${fieldId}-err`;
+
+  errMsg.setAttribute(
+    'role',
+    'alert'
+  );
+
+  errMsg.setAttribute(
+    'aria-live',
+    'polite'
+  );
+
+  /* =========================
+     MASKING FUNCTIONALITY
+  ========================= */
+
+  let inputContainer = input;
+
+  if (
+    fieldId === 'email' ||
+    fieldId === 'phone'
+  ) {
+
+    const wrapper =
+      document.createElement('div');
+
+    wrapper.className =
+      'masked-input-wrapper';
+
+    const eyeBtn =
+      document.createElement('button');
+
+    eyeBtn.type = 'button';
+
+    eyeBtn.className =
+      'mask-toggle-btn';
+
+    eyeBtn.innerHTML = '👁';
+
+    eyeBtn.dataset.visible = 'false';
+
+    const originalType = type;
+
+    
+
+    input.classList.add('masked');
+
+eyeBtn.addEventListener(
+  'click',
+  () => {
+
+    const visible =
+      eyeBtn.dataset.visible === 'true';
+
+    if (visible) {
+
+      input.classList.add('masked');
+
+      eyeBtn.innerHTML = '👁';
+
+      eyeBtn.dataset.visible =
+        'false';
+
+    } else {
+
+      input.classList.remove('masked');
+
+      eyeBtn.innerHTML = '🙈';
+
+      eyeBtn.dataset.visible =
+        'true';
     }
+  }
+);
+    wrapper.appendChild(input);
 
+    wrapper.appendChild(eyeBtn);
+
+    inputContainer = wrapper;
+  }
+
+  /* ========================= */
+
+  if (counter || min >= 10) {
+
+    const charDiv =
+      document.createElement('div');
+
+    charDiv.className =
+      'char-counter';
+
+    charDiv.id =
+      `${formId}-${fieldId}-counter`;
+
+    charDiv.textContent =
+      `${max} characters remaining`;
+
+    input.addEventListener(
+      'input',
+      () => {
+
+        updateCharCounter(
+          charDiv,
+          max - input.value.length,
+          max
+        );
+
+        validateField(
+          input,
+          errMsg,
+          { min, max, isEmail }
+        );
+      }
+    );
+
+    input.addEventListener(
+      'blur',
+      () =>
+        validateField(
+          input,
+          errMsg,
+          { min, max, isEmail }
+        )
+    );
+
+    group.appendChild(
+      inputContainer
+    );
+
+    group.appendChild(errMsg);
+
+    group.appendChild(charDiv);
+
+  } else {
+
+    input.addEventListener(
+      'input',
+      () =>
+        validateField(
+          input,
+          errMsg,
+          { min, max, isEmail }
+        )
+    );
+
+    input.addEventListener(
+      'blur',
+      () =>
+        validateField(
+          input,
+          errMsg,
+          { min, max, isEmail }
+        )
+    );
+
+    group.appendChild(
+      inputContainer
+    );
+
+    group.appendChild(errMsg);
+  }
+
+  return group;
+}
     function makeLabel(text, required = false) {
       const label     = document.createElement('div');
       label.className = 'form-field-label';
@@ -1429,7 +1675,60 @@ if (data.type === 'leadership_cards') {
       });
 
       row.appendChild(ccBtn);
-      row.appendChild(phoneInput);
+      const phoneWrapper =
+  document.createElement('div');
+
+phoneWrapper.className =
+  'masked-input-wrapper phone-mask-wrapper';
+
+const phoneEye =
+  document.createElement('button');
+
+phoneEye.type = 'button';
+
+phoneEye.className =
+  'mask-toggle-btn';
+
+phoneEye.innerHTML = '👁';
+
+phoneEye.dataset.visible = 'false';
+
+phoneInput.type = 'password';
+
+phoneInput.classList.add('masked');
+
+phoneEye.addEventListener(
+  'click',
+  () => {
+
+    const visible =
+      phoneEye.dataset.visible === 'true';
+
+    if (visible) {
+
+      phoneInput.classList.add('masked');
+
+      phoneEye.innerHTML = '👁';
+
+      phoneEye.dataset.visible =
+        'false';
+
+    } else {
+
+      phoneInput.classList.remove('masked');
+
+      phoneEye.innerHTML = '🙈';
+
+      phoneEye.dataset.visible =
+        'true';
+    }
+  }
+);
+phoneWrapper.appendChild(phoneInput);
+
+phoneWrapper.appendChild(phoneEye);
+
+row.appendChild(phoneWrapper);
       group.appendChild(row);
       group.appendChild(errMsg);
       return group;
