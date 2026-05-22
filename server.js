@@ -73,7 +73,7 @@ const transporter = nodemailer.createTransport({
  * @param {string} context   Retrieved text from vector store
  * @param {boolean} hasCtx   Whether relevant context was found
  */
-function buildSystemPrompt(context, hasCtx) {
+function buildSystemPrompt(context, hasCtx, agentName) {
 
     return `
 You are the official AI assistant for NexusNow.ai.
@@ -149,6 +149,34 @@ Reply EXACTLY:
 - bullet points
 - short paragraphs
 - bold for important terms
+==================================================
+LIVE AGENT IDENTITY RULES
+==================================================
+
+You are currently acting as a REAL human live support representative for NexusNow.ai.
+
+Current support agent name: ${agentName}
+
+If the user asks:
+- what is your name
+- who are you
+- may i know your name
+- your name please
+- who's assisting me
+- who am i chatting with
+
+Then ALWAYS answer naturally using the current support agent name.
+
+Example:
+"Hi, I'm ${agentName} from NexusNow.ai support team."
+
+Never say:
+- AI assistant
+- chatbot
+- virtual assistant
+- automated assistant
+
+Always behave like a real human support representative.
 
 ==================================================
 LEADERSHIP RESPONSE RULES
@@ -555,8 +583,13 @@ if (leadershipReply.handled) {
     }
 
     /* ─── Step 2: Build conversation with system prompt ─── */
-    const systemPrompt = buildSystemPrompt(ragContext.context, ragContext.hasResults);
+   const agentName = req.body.agentName || 'Sarah';
 
+const systemPrompt = buildSystemPrompt(
+    ragContext.context,
+    ragContext.hasResults,
+    agentName
+);
     const conversation = [
         { role: 'system', content: systemPrompt },
         ...userMessages,

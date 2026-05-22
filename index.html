@@ -96,6 +96,14 @@
       font-size: 18px;
       flex-shrink: 0;
       position: relative; z-index: 1;
+      overflow: hidden;
+    }
+    .header-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
     }
 
     .header-text { line-height: 1.3; position: relative; z-index: 1; }
@@ -190,6 +198,14 @@
       color: white;
       flex-shrink: 0;
       margin-bottom: 2px;
+      overflow: hidden;
+    }
+    .bot-avatar-mini img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
     }
 
     .message {
@@ -918,12 +934,12 @@
   <div id="chat-container" role="main" aria-label="NexusNow AI Assistant">
     <!-- Header -->
     <header id="chat-header" aria-label="Chat header">
-      <div class="header-avatar" aria-hidden="true">✦</div>
+      <div class="header-avatar" aria-hidden="true" id="header-agent-avatar"></div>
       <div class="header-text">
-        <div class="header-title">NexusNow.ai</div>
+        <div class="header-title" id="header-agent-name">NexusNow.ai</div>
         <div class="header-status">
           <span class="status-dot" aria-hidden="true"></span>
-          Online · Ready to assist
+          Live Support Agent
         </div>
       </div>
       <div class="header-actions">
@@ -980,6 +996,62 @@
   </div>
 
   <script>
+    /* ── Live Agent System ───────────────────────────────────────────────────── */
+    const LIVE_AGENTS = [
+      {
+        name: 'Sarah',
+        imgUrl: 'https://randomuser.me/api/portraits/women/44.jpg',
+      },
+      {
+        name: 'Emily',
+        imgUrl: 'https://randomuser.me/api/portraits/women/68.jpg',
+      },
+      {
+        name: 'Daniel',
+        imgUrl: 'https://randomuser.me/api/portraits/men/32.jpg',
+      },
+      {
+        name: 'Sophia',
+        imgUrl: 'https://randomuser.me/api/portraits/women/55.jpg',
+      },
+      {
+        name: 'Michael',
+        imgUrl: 'https://randomuser.me/api/portraits/men/76.jpg',
+      },
+      {
+        name: 'Olivia',
+        imgUrl: 'https://randomuser.me/api/portraits/women/21.jpg',
+      },
+    ];
+
+    const _selectedAgent = LIVE_AGENTS[Math.floor(Math.random() * LIVE_AGENTS.length)];
+
+    function _initAgentUI() {
+      // Header avatar
+      const headerAvatar = document.getElementById('header-agent-avatar');
+      if (headerAvatar) {
+        const img = document.createElement('img');
+        img.src = _selectedAgent.imgUrl;
+        img.alt = _selectedAgent.name;
+        img.onerror = function() { this.style.display='none'; headerAvatar.textContent='✦'; };
+        headerAvatar.appendChild(img);
+      }
+      // Header name
+      const headerName = document.getElementById('header-agent-name');
+      if (headerName) headerName.textContent = _selectedAgent.name;
+    }
+
+    function _makeBotAvatarImg() {
+      const img = document.createElement('img');
+      img.src = _selectedAgent.imgUrl;
+      img.alt = _selectedAgent.name;
+      img.onerror = function() {
+        img.style.display = 'none';
+        img.parentElement.textContent = '✦';
+      };
+      return img;
+    }
+
     /* ── Country Data ────────────────────────────────────────────────────────── */
     const COUNTRIES = [
       { code: 'IN', flag: '🇮🇳', name: 'India',          dial: '+91'  },
@@ -1042,7 +1114,9 @@
       if (chatInitialized) return;
       chatInitialized = true;
 
-      appendMessage('assistant', "Hi 👋\nWelcome to **NexusNow.ai**.\nI'm your AI assistant, trained on our website content. How can I help you today?");
+      _initAgentUI();
+
+      appendMessage('assistant', `Hi 👋\nI'm ${_selectedAgent.name} from NexusNow support.\nHow can I help you today?`);
 
     });
 
@@ -1075,7 +1149,7 @@
 
         const avatar = document.createElement('div');
         avatar.className = 'bot-avatar-mini';
-        avatar.textContent = '✦';
+        avatar.appendChild(_makeBotAvatarImg());
         avatar.setAttribute('aria-hidden', 'true');
 
         const msgDiv = document.createElement('div');
@@ -1152,7 +1226,7 @@
       inner.className   = 'bot-row-inner';
       const avatar      = document.createElement('div');
       avatar.className  = 'bot-avatar-mini';
-      avatar.textContent = '✦';
+      avatar.appendChild(_makeBotAvatarImg());
       const indicator   = document.createElement('div');
       indicator.className = 'typing-indicator';
       indicator.innerHTML = '<span></span><span></span><span></span>';
@@ -1195,11 +1269,16 @@
       }));
 
       try {
-        const response = await fetch(`${SERVER}/chat`, {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ messages: cleanMessages }),
-        });
+    const response = await fetch(`${SERVER}/chat`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+ body: JSON.stringify({
+  messages,
+  agentName: _selectedAgent.name
+})
+});
 
         if (!response.ok) {
           const err = await response.json().catch(() => ({}));
@@ -1209,6 +1288,18 @@
         const data = await response.json();
 
 hideTyping();
+
+        // Human-like pause before reply appears (800ms–1800ms)
+        const _humanDelay = 800 + Math.floor(Math.random() * 1000);
+        await new Promise(resolve => setTimeout(resolve, _humanDelay));
+
+        showTyping();
+
+        // Brief "reading" pause then show reply (600ms–1200ms)
+        const _readDelay = 600 + Math.floor(Math.random() * 600);
+        await new Promise(resolve => setTimeout(resolve, _readDelay));
+
+        hideTyping();
 
 /* =========================================
    LEADERSHIP CARD RESPONSE
@@ -1985,7 +2076,7 @@ function renderLeadershipCards(leaders, title) {
 
   avatar.className = 'bot-avatar-mini';
 
-  avatar.textContent = '✦';
+  avatar.appendChild(_makeBotAvatarImg());
 
   const wrapper = document.createElement('div');
 
@@ -2129,7 +2220,7 @@ document
   // add welcome screen again
   appendMessage(
     'assistant',
-    "Hi 👋\nWelcome to **NexusNow.ai**.\nI'm your AI assistant, trained on our website content. How can I help you today?"
+    `Hi 👋\nI'm ${_selectedAgent.name} from NexusNow support.\nHow can I help you today?`
   );
 
   // reset messages

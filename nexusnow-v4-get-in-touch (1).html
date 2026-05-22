@@ -806,6 +806,42 @@ body {
 }
 
 .nn-footer a { color: var(--nn-blue); text-decoration: none; font-weight: 600; }
+/* ═══════════════════════════════════════
+   CONSULTATION SUMMARY ALIGNMENT
+═══════════════════════════════════════ */
+
+.nn-summary-title{
+  margin-bottom:10px;
+  line-height:1.5;
+}
+
+.nn-summary-table{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.nn-summary-row{
+  display:grid;
+  grid-template-columns: 95px 10px 1fr;
+  align-items:start;
+  column-gap:6px;
+}
+
+.nn-summary-label{
+  font-weight:700;
+  color:var(--nn-blue);
+}
+
+.nn-summary-separator{
+  font-weight:700;
+  color:var(--nn-blue);
+}
+
+.nn-summary-value{
+  word-break:break-word;
+  color:var(--nn-text);
+}
 
 /* ════════════════════════════════════════════
    MOBILE
@@ -1246,6 +1282,45 @@ body {
 
 .nn-git-submit-btn.loading .nn-git-submit-spinner { display: block; }
 .nn-git-submit-btn.loading .nn-git-submit-text { opacity: .7; }
+
+/* ════════════════════════════════════════════
+   EYE TOGGLE — email & phone mask/reveal
+════════════════════════════════════════════ */
+.nn-git-input-eye-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.nn-git-input-eye-wrap .nn-git-input {
+  width: 100%;
+  padding-right: 34px;
+}
+.nn-git-input-eye-wrap .iti {
+  width: 100%;
+}
+.nn-git-input-eye-wrap .iti input[type="tel"] {
+  padding-right: 34px;
+}
+.nn-git-eye-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--nn-muted);
+  transition: color var(--transition);
+  z-index: 10;
+  outline: none;
+  line-height: 1;
+}
+.nn-git-eye-btn:hover { color: var(--nn-blue); }
+.nn-git-eye-btn svg { width: 15px; height: 15px; pointer-events: none; }
 
 /* ════════════════════════════════════════════
    INTL-TEL-INPUT OVERRIDES — Nexus UI scoped
@@ -2578,12 +2653,26 @@ body {
         const el = document.createElement('div');
         el.className = 'nn-input-block';
         el.id = `nn-lead-block-${inputId}`;
+        const isEyeField = (stepDef.key === 'email' || stepDef.key === 'phone');
+        const eyeIconOpen = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+        const eyeIconClosed = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+        const inputType = stepDef.key === 'email' ? 'password' : stepDef.type;
+        const inputMaskAttrs = isEyeField && stepDef.key === 'phone'
+          ? 'data-masked="true" style="width:100%;padding-right:34px; -webkit-text-security: disc; text-security: disc;"'
+          : 'style="width:100%;padding-right:34px;"';
+        const initialEyeIcon = isEyeField ? eyeIconClosed : eyeIconOpen;
+
         el.innerHTML = `
           <div class="nn-input-field-wrap" style="flex-direction:${isTextarea ? 'column' : 'row'}">
             ${isTextarea
               ? `<textarea id="${inputId}" class="nn-input-field" rows="3" placeholder="${stepDef.placeholder}"
                    style="resize:none;border-radius:var(--radius-sm);line-height:1.5;"></textarea>`
-              : `<input id="${inputId}" type="${stepDef.type}" class="nn-input-field" placeholder="${stepDef.placeholder}" />`
+              : isEyeField
+                ? `<div class="nn-git-input-eye-wrap" id="lead-eye-wrap-${inputId}" style="flex:1">
+                     <input id="${inputId}" type="${inputType}" class="nn-input-field" ${inputMaskAttrs} placeholder="${stepDef.placeholder}" />
+                     <button type="button" class="nn-git-eye-btn" id="lead-eye-${inputId}" aria-label="Toggle visibility" onclick="NN._toggleMask('${inputId}','lead-eye-${inputId}')">${initialEyeIcon}</button>
+                   </div>`
+                : `<input id="${inputId}" type="${stepDef.type}" class="nn-input-field" placeholder="${stepDef.placeholder}" />`
             }
             <div style="display:flex;gap:6px;margin-top:${isTextarea ? '6px' : '0'}">
               ${stepNum > 1
@@ -2613,6 +2702,13 @@ body {
                 utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.1.1/build/js/utils.js"
               });
               inp._iti = leadIti;
+              // Move eye button inside iti container so it overlays the tel input
+              const leadEyeBtn = document.getElementById(`lead-eye-${inputId}`);
+              const leadItiContainer = inp.closest('.iti');
+              if (leadEyeBtn && leadItiContainer) {
+                leadItiContainer.style.position = 'relative';
+                leadItiContainer.appendChild(leadEyeBtn);
+              }
             } else {
               inp.focus();
             }
@@ -2804,16 +2900,53 @@ body {
     syncLeadData();
 
     renderUserSelection(`🕐 ${slot}`);
-    await renderBotMessage(
-      `Perfect! Here's a summary of your consultation request:<br>
-       <strong>Name:</strong> ${lead.name}<br>
-       <strong>Email:</strong> ${lead.email}<br>
-       <strong>Phone:</strong> ${lead.phone}<br>
-       <strong>Company:</strong> ${lead.company}<br>
-       <strong>Requirement:</strong> ${lead.requirement}<br>
-       <strong>Date:</strong> ${lead.preferred_date} &nbsp;|&nbsp; <strong>Time:</strong> ${lead.preferred_time}`,
-      800
-    );
+    await renderBotMessage(`
+<div class="nn-summary-title">
+  Perfect! Here's a summary of your consultation request:
+</div>
+
+<div class="nn-summary-table">
+
+  <div class="nn-summary-row">
+    <span class="nn-summary-label">Name</span>
+    <span class="nn-summary-separator">:</span>
+    <span class="nn-summary-value">${lead.name}</span>
+  </div>
+
+  <div class="nn-summary-row">
+    <span class="nn-summary-label">Email</span>
+    <span class="nn-summary-separator">:</span>
+    <span class="nn-summary-value">${lead.email}</span>
+  </div>
+
+  <div class="nn-summary-row">
+    <span class="nn-summary-label">Phone</span>
+    <span class="nn-summary-separator">:</span>
+    <span class="nn-summary-value">${lead.phone}</span>
+  </div>
+
+  <div class="nn-summary-row">
+    <span class="nn-summary-label">Company</span>
+    <span class="nn-summary-separator">:</span>
+    <span class="nn-summary-value">${lead.company}</span>
+  </div>
+
+  <div class="nn-summary-row">
+    <span class="nn-summary-label">Requirement</span>
+    <span class="nn-summary-separator">:</span>
+    <span class="nn-summary-value">${lead.requirement}</span>
+  </div>
+
+  <div class="nn-summary-row">
+    <span class="nn-summary-label">Date</span>
+    <span class="nn-summary-separator">:</span>
+    <span class="nn-summary-value">
+      ${lead.preferred_date} | Time: ${lead.preferred_time}
+    </span>
+  </div>
+
+</div>
+`);
     await renderConfirmActions();
   }
 
@@ -3516,7 +3649,12 @@ body {
               <!-- Phone -->
               <div class="nn-git-field">
                 <label class="nn-git-label" for="${formId}-phone">Phone Number *</label>
-                <input id="${formId}-phone" type="tel" class="nn-git-input" placeholder="e.g. 9876543210" />
+                <div class="nn-git-input-eye-wrap" id="${formId}-phone-wrap">
+                  <input id="${formId}-phone" type="tel" class="nn-git-input" data-masked="true" style="-webkit-text-security: disc; text-security: disc;" placeholder="e.g. 9876543210" />
+                  <button type="button" class="nn-git-eye-btn" id="${formId}-phone-eye" aria-label="Toggle phone visibility" onclick="NN._toggleMask('${formId}-phone','${formId}-phone-eye')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  </button>
+                </div>
                 <span class="nn-git-error-msg" id="${formId}-phone-err"></span>
               </div>
 
@@ -3524,7 +3662,12 @@ body {
               <!-- Email -->
               <div class="nn-git-field">
                 <label class="nn-git-label" for="${formId}-email">Email Address *</label>
-                <input id="${formId}-email" class="nn-git-input" type="email" placeholder="e.g. rahul@company.com" autocomplete="email" />
+                <div class="nn-git-input-eye-wrap">
+                  <input id="${formId}-email" class="nn-git-input" type="password" placeholder="e.g. rahul@company.com" autocomplete="email" />
+                  <button type="button" class="nn-git-eye-btn" id="${formId}-email-eye" aria-label="Toggle email visibility" onclick="NN._toggleMask('${formId}-email','${formId}-email-eye')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  </button>
+                </div>
                 <span class="nn-git-error-msg" id="${formId}-email-err"></span>
               </div>
             </div>
@@ -3557,6 +3700,14 @@ body {
         });
         // Store iti instance on element for retrieval in submit
         gitPhoneEl._iti = gitIti;
+
+        // ── Eye-btn: move into the iti wrapper so it overlays the tel input ──
+        const phoneEyeBtn = document.getElementById(`${formId}-phone-eye`);
+        const itiContainer = gitPhoneEl.closest('.iti');
+        if (phoneEyeBtn && itiContainer) {
+          itiContainer.style.position = 'relative';
+          itiContainer.appendChild(phoneEyeBtn);
+        }
 
         // Focus first field
         setTimeout(() => {
@@ -3729,7 +3880,38 @@ body {
     handleTextInput,
     toggleTeamBio,
     startGetInTouchFlow,
-    submitGetInTouch
+    submitGetInTouch,
+    _toggleMask(inputId, btnId) {
+      const inp = document.getElementById(inputId);
+      const btn = document.getElementById(btnId);
+      if (!inp || !btn) return;
+      const isHidden = inp.type === 'password' || inp.getAttribute('data-masked') === 'true';
+      // For tel inputs we use a data attribute trick since type=tel can't be 'password'
+      if (inp.type === 'tel' || inp.getAttribute('data-masked') !== null) {
+        if (isHidden) {
+          inp.removeAttribute('data-masked');
+          inp.style.webkitTextSecurity = '';
+          inp.style.textSecurity = '';
+          btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+        } else {
+          inp.setAttribute('data-masked', 'true');
+          inp.style.webkitTextSecurity = 'disc';
+          inp.style.textSecurity = 'disc';
+          btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+        }
+      } else {
+        if (isHidden) {
+          const originalType = inp.getAttribute('data-original-type') || inp.type;
+          inp.type = originalType === 'password' ? 'text' : originalType;
+          inp.removeAttribute('data-original-type');
+          btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+        } else {
+          inp.setAttribute('data-original-type', inp.type);
+          inp.type = 'password';
+          btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+        }
+      }
+    }
   };
 
   // Override the initialized renderHome call inside toggle()
@@ -3813,7 +3995,28 @@ window.addEventListener('message', (event) => {
     }
 
 });
+/* AUTO OPEN CHATBOT AFTER PAGE LOAD */
+window.addEventListener('load', () => {
 
+  setTimeout(() => {
+
+    /* LOAD INITIAL CHAT CONTENT */
+    if (typeof NN !== 'undefined' && NN.restartChat) {
+      NN.restartChat();
+    }
+
+    /* OPEN CHATBOX */
+    const chatbox = document.getElementById('nn-chatbox');
+    const fab = document.getElementById('nn-fab');
+    const badge = document.getElementById('nn-badge');
+
+    if (chatbox) chatbox.classList.add('open');
+    if (fab) fab.classList.add('open');
+    if (badge) badge.classList.add('hidden');
+
+  }, 5000);
+
+});
 </script>
 </body>
 </html>
